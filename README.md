@@ -18,7 +18,7 @@ The last 7 races of the F1 season become a playoff:
 | Round 3        | 2 races         | 6 → 4   | Bottom 2 eliminated |
 | Final          | 1 race          | 4       | Winner takes title  |
 
-Points reset at the start of each playoff round. Standard F1 points apply (race, sprint, pole, fastest lap).
+Points reset at the start of each playoff round. Each season's official F1 points apply as awarded: race and sprint points, plus the fastest-lap point in the seasons that had one. There is no pole-position point.
 
 ## Features
 
@@ -46,7 +46,7 @@ npm install
 # Start development server
 npm run dev
 
-# Run tests (31 tests covering playoff engine)
+# Run tests (50 tests covering the playoff engine and its helpers)
 npm test
 
 # Build for production
@@ -70,7 +70,8 @@ src/
 ├── constants/      # Points, playoffs, config
 └── types/          # TypeScript interfaces
 data/
-├── 2025.json       # Cached 2025 season data
+├── 2020.json       # Cached 2020 season data
+├── ...             # One file per season
 └── 2026.json       # Cached 2026 season data
 ```
 
