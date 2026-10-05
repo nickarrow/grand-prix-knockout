@@ -36,7 +36,7 @@ Note: Husky pre-commit hooks run automatically on commit (lint + format staged f
 
 ## Code Standards
 
-Please follow the development standards outlined in `.kiro/steering/dev-standards.md`. Key points:
+Please follow `AGENTS.md` and the development standards in `.kiro/skills/codebase-conventions/SKILL.md`. Key points:
 
 - **TypeScript**: Use strict mode, no `any` types, explicit return types
 - **Components**: Functional components only, one per file, under 200 lines
@@ -45,9 +45,9 @@ Please follow the development standards outlined in `.kiro/steering/dev-standard
 
 ## Testing
 
-The playoff calculation engine has 31 unit tests covering:
+The test suite has 50 unit tests covering:
 
-- Points calculation (race, sprint, pole, fastest lap)
+- Points calculation (official race and sprint points from the API, with no pole-position bonus)
 - Standings and tiebreaker logic
 - Playoff elimination mechanics
 - Season status detection
