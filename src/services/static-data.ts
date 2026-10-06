@@ -1,7 +1,7 @@
 // Static data loader for pre-fetched season data
 // This loads bundled JSON files instead of making API calls
 
-import type { Race, RaceCalendar, Driver } from 'src/types';
+import type { Race, RaceCalendar } from 'src/types';
 
 // Static data type matching the JSON structure
 interface StaticRaceResult {
@@ -139,11 +139,17 @@ export async function loadStaticSeasonData(year: number): Promise<{
       sprint: race.sprint,
     }));
 
-    // Add hasSprintRace to calendar entries
-    const calendar: RaceCalendar[] = data.calendar.map((entry) => ({
-      ...entry,
-      hasSprintRace: data.races.find((r) => r.round === entry.round)?.sprint !== null,
-    }));
+    // Add hasSprintRace to calendar entries. A round with a present sprint array
+    // reads true; absent, undefined or null all read false. The earlier
+    // `sprint !== null` test marked a future round (sprint undefined) as true,
+    // because undefined !== null.
+    const calendar: RaceCalendar[] = data.calendar.map((entry) => {
+      const race = data.races.find((r) => r.round === entry.round);
+      return {
+        ...entry,
+        hasSprintRace: Boolean(race && race.sprint),
+      };
+    });
 
     return {
       calendar,
@@ -153,27 +159,4 @@ export async function loadStaticSeasonData(year: number): Promise<{
   } catch {
     return null;
   }
-}
-
-// Extract drivers from static race data
-export function extractDriversFromStaticData(races: StaticRace[]): Driver[] {
-  const driverMap = new Map<string, Driver>();
-
-  for (const race of races) {
-    for (const result of race.results) {
-      if (!driverMap.has(result.driverId)) {
-        driverMap.set(result.driverId, {
-          driverId: result.driverId,
-          code: result.driverCode,
-          firstName: result.firstName,
-          lastName: result.lastName,
-          nationality: '',
-          constructorId: result.constructorId,
-          constructorName: result.constructorName,
-        });
-      }
-    }
-  }
-
-  return Array.from(driverMap.values());
 }
