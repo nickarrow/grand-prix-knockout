@@ -6,18 +6,28 @@ import { useParams } from 'react-router-dom';
 import { usePlayoffData } from 'src/hooks';
 import { StandingsTable } from 'src/components/standings';
 import { PlayoffExplainer } from 'src/components/common';
-import {
-  TROPHY_ICON_SIZE_LARGE,
-  FINAL_ROUND_NUMBER,
-  DEFAULT_SEASON,
-  getTeamColor,
-} from 'src/constants';
+import { hasStaticData } from 'src/services';
+import { TROPHY_ICON_SIZE_LARGE, FINAL_ROUND_NUMBER, getTeamColor } from 'src/constants';
 import { PODIUM_COLORS } from 'src/theme/palette';
+
+import { NotFoundPage } from './NotFoundPage';
 
 export function SeasonPage(): React.ReactElement {
   const { year } = useParams<{ year: string }>();
   const parsedYear = Number.parseInt(year ?? '', 10);
-  const seasonYear = Number.isNaN(parsedYear) ? DEFAULT_SEASON : parsedYear;
+
+  // Guard the :year param before any data request. An unparseable year
+  // (Number.isNaN) or a season the site does not cover renders the not-found /
+  // no-data page and never reaches usePlayoffData, so Jolpica is never called
+  // for an unsupported year.
+  if (Number.isNaN(parsedYear) || !hasStaticData(parsedYear)) {
+    return <NotFoundPage />;
+  }
+
+  return <SeasonStandings seasonYear={parsedYear} />;
+}
+
+function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactElement {
   const theme = useTheme();
   const mode = theme.palette.mode;
 
