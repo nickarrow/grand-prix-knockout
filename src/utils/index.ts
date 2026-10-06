@@ -15,11 +15,12 @@ export function getEliminationRound(driverId: string, playoffState: PlayoffState
 }
 
 // Whether the regular season is over, so playoff banners (including the
-// "Did Not Advance" banner for non-qualifiers) should show. Keyed off season
-// status rather than the presence of a round object, because a round now exists
-// mid-run with no eliminations yet.
+// "Did Not Advance" banner for non-qualifiers) should show. Reads the engine's
+// flag, which is true once every regular-season race has run, even before the
+// first playoff race, rather than the presence of a round object (a round now
+// exists mid-run with no eliminations yet).
 export function isRegularSeasonComplete(playoffState: PlayoffState): boolean {
-  return playoffState.status === 'playoffs' || playoffState.status === 'completed';
+  return playoffState.regularSeasonComplete;
 }
 
 // The playoff round currently in progress: one that has races but is not yet

@@ -50,6 +50,7 @@ describe('getEliminationRound', () => {
       totalRaces: 24,
       regularSeasonRaces: 17,
       playoffStartRace: 18,
+      regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2', 'd3'],
       rounds: [],
@@ -66,6 +67,7 @@ describe('getEliminationRound', () => {
       totalRaces: 24,
       regularSeasonRaces: 17,
       playoffStartRace: 18,
+      regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2', 'd3'],
       rounds: [createRound(1, [{ id: 'd1', points: 50 }], [])],
@@ -82,6 +84,7 @@ describe('getEliminationRound', () => {
       totalRaces: 24,
       regularSeasonRaces: 17,
       playoffStartRace: 18,
+      regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2', 'd3'],
       rounds: [
@@ -134,6 +137,7 @@ describe('getBracketPoints', () => {
       totalRaces: 24,
       regularSeasonRaces: 17,
       playoffStartRace: 18,
+      regularSeasonComplete: false,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1'],
       rounds: [],
@@ -150,6 +154,7 @@ describe('getBracketPoints', () => {
       totalRaces: 24,
       regularSeasonRaces: 17,
       playoffStartRace: 18,
+      regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1'],
       rounds: [
@@ -175,6 +180,7 @@ describe('getBracketPoints', () => {
       totalRaces: 24,
       regularSeasonRaces: 17,
       playoffStartRace: 18,
+      regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2'],
       rounds: [

@@ -243,6 +243,9 @@ export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): 
     totalRaces,
     regularSeasonRaces: regularSeasonEnd,
     playoffStartRace,
+    // The regular season is complete once every regular-season race has run, even
+    // before the first playoff race. The qualifiers are then fixed (decision 0005).
+    regularSeasonComplete: completedRaces >= regularSeasonEnd,
     regularSeasonStandings,
     qualifiedDrivers: qualifiedDriverIds,
     rounds,

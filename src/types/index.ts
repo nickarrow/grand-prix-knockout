@@ -101,6 +101,7 @@ export interface PlayoffState {
   totalRaces: number;
   regularSeasonRaces: number;
   playoffStartRace: number;
+  regularSeasonComplete: boolean; // every regular-season race has run (qualifiers are then fixed)
   regularSeasonStandings: DriverStanding[];
   qualifiedDrivers: string[]; // Top 10 driverIds
   rounds: PlayoffRound[];
