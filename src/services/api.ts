@@ -15,6 +15,7 @@ export const queryKeys = {
     all: ['seasons'] as const,
     calendar: (year: number) => [...queryKeys.seasons.all, 'calendar', year] as const,
     results: (year: number) => [...queryKeys.seasons.all, 'results', year] as const,
+    standingOrder: (year: number) => [...queryKeys.seasons.all, 'standingOrder', year] as const,
     full: (year: number) => [...queryKeys.seasons.all, 'full', year] as const,
   },
   // Race-related keys
@@ -58,6 +59,15 @@ async function getSeasonResults(year: number): Promise<Race[]> {
   }
 }
 
+// Fetch the stored official regular-season standings order (decision 0004 Option A
+// terminal tiebreak key). Only bundled seasons carry it; the live API has no such
+// order, so a season served from the API yields an empty order and the engine
+// falls back to the countback alone.
+async function getSeasonStandingOrder(year: number): Promise<string[]> {
+  const staticData = await loadStaticSeasonData(year);
+  return staticData?.regularSeasonStandingOrder ?? [];
+}
+
 // Fetch single race with error handling
 async function getRaceResults(year: number, round: number): Promise<Race | null> {
   try {
@@ -96,20 +106,30 @@ export function useRaceResults(
   });
 }
 
-// Combined hook to fetch full season data (calendar + results)
+export function useSeasonStandingOrder(year: number): ReturnType<typeof useQuery<string[], Error>> {
+  return useQuery({
+    queryKey: queryKeys.seasons.standingOrder(year),
+    queryFn: () => getSeasonStandingOrder(year),
+  });
+}
+
+// Combined hook to fetch full season data (calendar + results + standing order)
 export function useSeasonData(year: number): {
   calendar: RaceCalendar[] | undefined;
   races: Race[] | undefined;
+  regularSeasonStandingOrder: string[] | undefined;
   isLoading: boolean;
   error: Error | null;
 } {
   const calendarQuery = useSeasonCalendar(year);
   const resultsQuery = useSeasonResults(year);
+  const standingOrderQuery = useSeasonStandingOrder(year);
 
   return {
     calendar: calendarQuery.data,
     races: resultsQuery.data,
-    isLoading: calendarQuery.isLoading || resultsQuery.isLoading,
-    error: calendarQuery.error ?? resultsQuery.error,
+    regularSeasonStandingOrder: standingOrderQuery.data,
+    isLoading: calendarQuery.isLoading || resultsQuery.isLoading || standingOrderQuery.isLoading,
+    error: calendarQuery.error ?? resultsQuery.error ?? standingOrderQuery.error,
   };
 }

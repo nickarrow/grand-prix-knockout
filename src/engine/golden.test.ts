@@ -1,19 +1,29 @@
 // Golden regression suite: pins the full playoff outcome of every bundled season.
 //
-// These baselines were generated from the engine as it stood at the start of
-// increment 1 and are committed BEFORE any engine edit, so that the engine
-// changes in this increment (reporting a drop zone instead of eliminating
-// mid-round, and the 2026-only regular-season tiebreak key) can be proven not
-// to move any completed season's result.
+// These baselines are the record of truth for the playoff engine. 2020-2025 are
+// complete seasons; their blocks must never move from an engine edit. If one
+// moves, that is a real regression unless a decision record in docs/decisions/
+// records it on purpose, as AGENTS.md requires.
 //
-// 2020-2025 are complete seasons; their blocks must never change from an engine
-// edit. If one moves, that is a real regression unless a decision record in
-// docs/decisions/ records it on purpose, as AGENTS.md requires.
+// Updated in increment 2 (decision 0006) for the full-classification tiebreaker.
+// That rule, which counts every classified finishing position with no cut-off and
+// applies to every season, moved four completed seasons from their increment-1
+// values:
+//   - 2020: champion Hamilton -> Verstappen, with the Round 1/2/4 cascade below.
+//     The hinge is the Round 1 0-point tie, where Albon's best finish (12th) beats
+//     Norris's (13th), so Albon survives, Norris goes out, and the bracket
+//     cascades to Verstappen winning the one-race final.
+//   - 2023: Round 1 and Round 2 eliminations change; same four finalists, same
+//     champion (Verstappen).
+//   - 2021: Round 3 eliminated pair reorders (Sainz then Leclerc); order only,
+//     same finalists and champion.
+//   - 2022: Round 2 eliminated pair reorders (Bottas then Sainz); order only,
+//     same finalists and champion.
+// 2024 and 2025 are unchanged. See docs/decisions/0006 for the full before/after.
 //
-// 2026 is a season in progress. Its block reflects the bundled data at the time
-// of writing. It changes ONLY when the data is refreshed (increment 1 task 7
-// takes it from 14 to 16 races), never from an engine edit. The comment on the
-// 2026 block records which data it came from.
+// 2026 is a season in progress. Its block reflects the bundled data (16-race
+// regular season complete, no playoff round run). It changes ONLY when the data is
+// refreshed, never from an engine edit.
 
 import { describe, it, expect } from 'vitest';
 
@@ -51,12 +61,12 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
       'perez',
       'gasly',
     ],
-    champion: 'hamilton',
+    champion: 'max_verstappen',
     status: 'completed',
     rounds: [
       {
         round: 1,
-        eliminated: ['albon', 'stroll'],
+        eliminated: ['norris', 'stroll'],
         advancing: [
           'hamilton',
           'max_verstappen',
@@ -65,23 +75,23 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
           'perez',
           'gasly',
           'ricciardo',
-          'norris',
+          'albon',
         ],
       },
       {
         round: 2,
-        eliminated: ['max_verstappen', 'gasly'],
-        advancing: ['hamilton', 'perez', 'leclerc', 'bottas', 'ricciardo', 'norris'],
+        eliminated: ['albon', 'gasly'],
+        advancing: ['hamilton', 'perez', 'leclerc', 'bottas', 'ricciardo', 'max_verstappen'],
       },
       {
         round: 3,
         eliminated: ['bottas', 'leclerc'],
-        advancing: ['hamilton', 'perez', 'ricciardo', 'norris'],
+        advancing: ['perez', 'hamilton', 'max_verstappen', 'ricciardo'],
       },
       {
         round: 4,
-        eliminated: ['norris', 'ricciardo', 'perez'],
-        advancing: ['hamilton'],
+        eliminated: ['hamilton', 'ricciardo', 'perez'],
+        advancing: ['max_verstappen'],
       },
     ],
   },
@@ -122,7 +132,7 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
       },
       {
         round: 3,
-        eliminated: ['leclerc', 'sainz'],
+        eliminated: ['sainz', 'leclerc'],
         advancing: ['hamilton', 'max_verstappen', 'bottas', 'perez'],
       },
       {
@@ -164,7 +174,7 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
       },
       {
         round: 2,
-        eliminated: ['sainz', 'bottas'],
+        eliminated: ['bottas', 'sainz'],
         advancing: ['max_verstappen', 'perez', 'leclerc', 'hamilton', 'russell', 'norris'],
       },
       {
@@ -197,7 +207,7 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
     rounds: [
       {
         round: 1,
-        eliminated: ['gasly', 'stroll'],
+        eliminated: ['perez', 'stroll'],
         advancing: [
           'max_verstappen',
           'norris',
@@ -206,12 +216,12 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
           'hamilton',
           'alonso',
           'sainz',
-          'perez',
+          'gasly',
         ],
       },
       {
         round: 2,
-        eliminated: ['perez', 'alonso'],
+        eliminated: ['gasly', 'alonso'],
         advancing: ['max_verstappen', 'norris', 'sainz', 'hamilton', 'leclerc', 'russell'],
       },
       {
@@ -349,7 +359,7 @@ const SEASON_2026: GoldenOutcome = {
 function outcomeFor(year: number): Promise<GoldenOutcome> {
   return loadStaticSeasonData(year).then((data) => {
     if (!data) throw new Error(`No bundled data for ${year}`);
-    const state = calculatePlayoffState(data.races, data.calendar);
+    const state = calculatePlayoffState(data.races, data.calendar, data.regularSeasonStandingOrder);
     return {
       qualifiedDrivers: state.qualifiedDrivers,
       champion: state.champion,

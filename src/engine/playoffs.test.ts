@@ -267,17 +267,46 @@ describe('calculatePlayoffState', () => {
     expect(round1?.eliminated).toContain('d10');
   });
 
-  it('breaks a 2026 round tie at the elimination boundary by regular-season position', () => {
-    // A 2026 season (so the interim regular-season tiebreak key is active) where
-    // two qualified drivers finish Round 1 level on points AND on the full P1-P10
-    // countback, sitting exactly on the advance/eliminate boundary. Without the
-    // key the order would fall to sort stability; with it the driver who finished
-    // the regular season higher advances and the other is eliminated.
-    const season = 2026;
+  it('breaks a round tie at the elimination boundary by the stored official order', () => {
+    // Two qualified drivers finish Round 1 level on points AND on the full
+    // countback, sitting exactly on the advance/eliminate boundary. The only thing
+    // left is the stored official regular-season order. It says d9 finished ahead
+    // of d8, so d9 advances and d8 is eliminated.
+    //
+    // Everything in the DATA opposes that answer. The round's races, the drivers
+    // array and every result list put d8 before d9 (d8 takes P8 in the first race
+    // and the drivers appear d8-then-d9), so first-appearance order and the
+    // engine's own regular-season standings would both favour d8. Only the stored
+    // order, passed as the third argument, can make d9 win.
+    const seasonRace = (round: number, order: string[]): Race =>
+      createRace(
+        round,
+        order.map((id, pos) => ({ id, position: pos + 1 }))
+      );
 
-    // Regular-season order: d1..d7, then d9 ahead of d8, then d10. This makes d9's
-    // regular-season position (8) better than d8's (9), so d9 should win the tie.
-    const regularSeasonFinishOrder = [
+    // A 23-race calendar makes the regular season 16 races (even), so d8 and d9
+    // can alternate P8/P9 and end genuinely level there too. The terminal key
+    // then has to decide their regular-season rank, which flows into the round.
+    const calendar = createCalendar(23);
+
+    // Regular season (rounds 1-16): d8 and d9 alternate 8th and 9th, level on
+    // points and countback. d8 leads the first race, so first-appearance order and
+    // sort stability both favour d8. Only the stored order can lift d9.
+    const regularSeasonRaces = Array.from({ length: 16 }, (_, i) => {
+      const pair = i % 2 === 0 ? ['d8', 'd9'] : ['d9', 'd8'];
+      return seasonRace(i + 1, ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', ...pair, 'd10']);
+    });
+
+    // Round 1 (races 17-18): d8 and d9 swap 8th and 9th, so each ends one P8 and
+    // one P9 — identical points, identical countback. d8 leads the first race.
+    const round1Order17 = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'];
+    const round1Order18 = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd9', 'd8', 'd10'];
+    const round1Races = [seasonRace(17, round1Order17), seasonRace(18, round1Order18)];
+
+    const races = [...regularSeasonRaces, ...round1Races];
+
+    // Stored official order: d9 ahead of d8. Opposes the data.
+    const officialOrder = [
       'd1',
       'd2',
       'd3',
@@ -292,40 +321,49 @@ describe('calculatePlayoffState', () => {
       'd12',
     ];
 
-    const seasonRace = (round: number, order: string[]): Race => ({
-      ...createRace(
-        round,
-        order.map((id, pos) => ({ id, position: pos + 1 }))
-      ),
-      season,
-    });
-
-    const calendar: RaceCalendar[] = createCalendar(24).map((c) => ({ ...c, season }));
-
-    // Regular season (rounds 1-17): the fixed finishing order above.
-    const regularSeasonRaces = Array.from({ length: 17 }, (_, i) =>
-      seasonRace(i + 1, regularSeasonFinishOrder)
-    );
-
-    // Round 1 (races 18-19): d8 and d9 swap 8th and 9th across the two races, so
-    // each ends with one P8 and one P9 — identical points and identical countback.
-    // d1-d7 finish above them, d10 below, so the tied pair lands at ranks 8 and 9.
-    const round1Order18 = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'];
-    const round1Order19 = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd9', 'd8', 'd10'];
-    const round1Races = [seasonRace(18, round1Order18), seasonRace(19, round1Order19)];
-
-    const races = [...regularSeasonRaces, ...round1Races];
-
-    const state = calculatePlayoffState(races, calendar);
-
-    expect(state.season).toBe(season);
+    const state = calculatePlayoffState(races, calendar, officialOrder);
 
     const round1 = state.rounds[0];
     expect(round1?.isComplete).toBe(true);
-    // d9 finished the regular season ahead of d8, so d9 advances and d8 is out.
+    // The stored order puts d9 ahead of d8, so d9 advances and d8 is out, against
+    // everything the data would have said.
     expect(round1?.advancing).toContain('d9');
     expect(round1?.eliminated).toContain('d8');
     // d10 is the clear bottom and is eliminated regardless of the key.
     expect(round1?.eliminated).toContain('d10');
+  });
+
+  it('orders the full regular-season standings by the stored official order when drivers are level', () => {
+    // d1 and d2 finish the regular season level on points and on the countback.
+    // The data puts d2 before d1 is impossible to express through finishing order
+    // alone when both are always level, so the only separator is the stored order,
+    // which ranks d1 first. The drivers array lists d2 first, opposing the answer.
+    const seasonRace = (round: number, order: string[]): Race =>
+      createRace(
+        round,
+        order.map((id, pos) => ({ id, position: pos + 1 }))
+      );
+
+    // A 23-race calendar makes the regular season 16 races (23 - 7), an even
+    // count, so alternating P1/P2 leaves d1 and d2 level on both points and the
+    // countback (8 wins and 8 seconds each).
+    const calendar = createCalendar(23);
+    const regularSeasonRaces = Array.from({ length: 16 }, (_, i) => {
+      // d2 leads the first race, so first-appearance order and sort stability both
+      // favour d2. Only the stored official order can lift d1 above it.
+      const top = i % 2 === 0 ? ['d2', 'd1'] : ['d1', 'd2'];
+      return seasonRace(i + 1, [...top, 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10']);
+    });
+
+    // Drivers appear d2 before d1, opposing the answer. Stored official order
+    // ranks d1 first.
+    const officialOrder = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'];
+
+    const state = calculatePlayoffState(regularSeasonRaces, calendar, officialOrder);
+
+    const [first, second] = state.regularSeasonStandings;
+    expect(first?.points).toBe(second?.points); // genuinely level
+    expect(first?.driver.driverId).toBe('d1'); // the official order decides
+    expect(second?.driver.driverId).toBe('d2');
   });
 });

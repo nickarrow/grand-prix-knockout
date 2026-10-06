@@ -1,11 +1,6 @@
 // Playoff calculation engine
 
-import {
-  PLAYOFF_RACES,
-  PLAYOFF_QUALIFIERS,
-  PLAYOFF_ROUNDS,
-  INTERIM_TIEBREAK_SEASON,
-} from 'src/constants';
+import { PLAYOFF_RACES, PLAYOFF_QUALIFIERS, PLAYOFF_ROUNDS } from 'src/constants';
 import type {
   Race,
   RaceCalendar,
@@ -153,8 +148,28 @@ function calculatePlayoffRound(
   };
 }
 
-// Calculate complete playoff state for a season
-export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): PlayoffState {
+// Build a driverId -> rank map from the stored official regular-season standings
+// order (decision 0004, Option A terminal key). The order is a dense rank with no
+// ties, so the map never produces a tie and ends the tiebreak chain. An empty or
+// missing order yields an empty map, which the comparator ignores.
+function buildOfficialOrderMap(order: string[]): Map<string, number> {
+  return new Map(order.map((driverId, index) => [driverId, index]));
+}
+
+// Calculate complete playoff state for a season.
+//
+// regularSeasonStandingOrder is the official F1 driver-standings order after the
+// last regular-season race, stored per season in data/<year>.json (decision 0004,
+// Option A). It is the terminal tiebreak key, applied to EVERY season: it orders
+// the regular-season standings themselves (so a tie like 2026 Norris and
+// Verstappen on 188 resolves), and through them every playoff ordering. When it is
+// absent (e.g. a live-API season with no stored order) the engine falls back to
+// the countback alone, leaving genuinely tied drivers in input order.
+export function calculatePlayoffState(
+  races: Race[],
+  calendar: RaceCalendar[],
+  regularSeasonStandingOrder: string[] = []
+): PlayoffState {
   const totalRaces = calendar.length;
   const regularSeasonEnd = totalRaces - PLAYOFF_RACES;
   const playoffStartRace = regularSeasonEnd + 1;
@@ -163,27 +178,34 @@ export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): 
   // Extract all drivers from the season
   const allDrivers = extractDrivers(races);
 
+  // The stored official standings order is the terminal tiebreak key. It orders
+  // the regular-season standings, so even a regular-season tie resolves to a
+  // definite order.
+  const officialOrder = buildOfficialOrderMap(regularSeasonStandingOrder);
+
   // Calculate regular season standings (pass all races for official F1 points)
   const regularSeasonRaces = getRegularSeasonRaces(races, totalRaces);
   const regularSeasonStandings = calculateStandings(
     allDrivers,
     regularSeasonRaces,
     regularSeasonRaces,
-    races
+    races,
+    officialOrder
   );
 
-  // Season being computed. Used to scope the interim regular-season tiebreak key.
+  // Season being computed.
   const season = races[0]?.season ?? calendar[0]?.season ?? 0;
 
-  // For the season in progress only, build a driverId -> regular-season finishing
-  // position map and use it as the final tiebreak key inside playoff rounds, so a
-  // drop zone has a deterministic order rather than falling to sort stability
-  // (decision 0004, increment-1 scope). Completed seasons pass nothing and keep
-  // their published order unchanged.
-  const regularSeasonOrder =
-    season === INTERIM_TIEBREAK_SEASON
-      ? new Map(regularSeasonStandings.map((s) => [s.driver.driverId, s.position]))
-      : undefined;
+  // The terminal key inside a playoff round is the regular-season finishing
+  // position, falling through to the official order (decision 0004 answer 4).
+  // The regular-season standings above are already fully ordered by that chain
+  // (countback over the regular-season races, then the official order), so their
+  // positions are a dense rank that carries both keys at once. Pass that rank into
+  // every playoff round so bracket placings, finalist places 2-4, the drop zone
+  // and the non-qualifiers all resolve deterministically.
+  const regularSeasonOrder = new Map(
+    regularSeasonStandings.map((s) => [s.driver.driverId, s.position])
+  );
 
   // Determine qualified drivers (top 10 from regular season)
   const qualifiedDriverIds = regularSeasonStandings

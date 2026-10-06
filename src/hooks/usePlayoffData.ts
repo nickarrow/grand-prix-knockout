@@ -15,14 +15,14 @@ interface UsePlayoffDataResult {
 }
 
 export function usePlayoffData(year: number): UsePlayoffDataResult {
-  const { calendar, races, isLoading, error } = useSeasonData(year);
+  const { calendar, races, regularSeasonStandingOrder, isLoading, error } = useSeasonData(year);
 
   const playoffState = useMemo(() => {
     if (!calendar || !races) {
       return null;
     }
-    return calculatePlayoffState(races, calendar);
-  }, [calendar, races]);
+    return calculatePlayoffState(races, calendar, regularSeasonStandingOrder ?? []);
+  }, [calendar, races, regularSeasonStandingOrder]);
 
   return {
     playoffState,

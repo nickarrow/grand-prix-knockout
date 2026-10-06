@@ -4,6 +4,7 @@ export {
   useSeasonCalendar,
   useSeasonResults,
   useRaceResults,
+  useSeasonStandingOrder,
   useSeasonData,
 } from './api';
 

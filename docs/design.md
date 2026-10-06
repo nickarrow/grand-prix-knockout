@@ -92,49 +92,40 @@ The wording of the drop zone is still to be approved by the owner.
 
 ### Ties
 
-Target, decided by the owner on 2026-10-05 (`docs/decisions/0004-tiebreak-countback-then-regular-season.md`): drivers
-level on points are separated by countback first, and by regular-season position as the final fallback. The same order
-applies everywhere the site ranks drivers: qualification, eliminations, places within an elimination group, finalist
-places 2 to 4, and the non-qualifiers.
+Decided by the owner on 2026-10-05 and 2026-10-06, and built in increment 2
+(`docs/decisions/0004-tiebreak-countback-then-regular-season.md`). Drivers level on points are separated by this chain,
+and the same chain applies everywhere the site ranks drivers: qualification, eliminations, places within an elimination
+group, finalist places 2 to 4, the non-qualifiers, and the regular-season standings themselves.
 
-Current, confirmed: the engine counts race finishes in P1 to P10 within the races being compared and then leaves the
-order to sort stability, which is the order in which drivers first appear in the season's results. Positions are missing
-for classified drivers whose status is "Retired". Finalist places 2 to 4 and the places within elimination groups sort
-by points alone. Sort stability has decided five real eliminations, all in Round 1 (verified by running the engine on
-the bundled data):
+1. **Points.** The driver with more points in the races being compared ranks higher.
+2. **Full-classification countback.** Over the round's races only, count every classified finishing position from
+   Jolpica's `positionText`: most 1sts, then most 2nds, and so on down the whole field with no cut-off at tenth. A
+   numeric `positionText` is a classified position, so a classified retiree keeps its place; a letter is not classified
+   and does not count. Race finishes only. Sprint finishes never count here, following the FIA's "places in a race"
+   (2021 to 2025 Sporting Regulations Art. 7.2; 2026 Section A, A2.1.4c), though sprint points still count toward a
+   round's points.
+3. **Regular-season finishing position.** The driver who finished the regular season higher ranks higher.
+4. **The official F1 standings order.** Where regular-season position cannot be its own fallback, because two drivers
+   are level in the regular-season standings themselves, the order of the official F1 driver standings after the last
+   regular-season race decides it (decision 0004, Option A; question 4 resolved). It is read by the data script from
+   Jolpica's driver standings for that round and stored per season under `regularSeasonStandingOrder`. It is a dense
+   rank with no ties, so it is the terminal key: the comparator returns "equal" only when two drivers are genuinely
+   equal under the whole chain, and no result depends on array order or sort stability.
 
-| Season | Round   | Advanced | Eliminated    | Points each |
-| ------ | ------- | -------- | ------------- | ----------- |
-| 2020   | Round 1 | Norris   | Albon, Stroll | 0           |
-| 2022   | Round 1 | Bottas   | Ocon, Alonso  | 0           |
-| 2023   | Round 1 | Perez    | Gasly         | 1           |
+How the engine threads this: the regular-season standings are sorted by the chain above with the stored official order
+as the terminal key, so even a regular-season tie (2026 Norris and Verstappen on 188) resolves to a definite order. That
+fully resolved order is then the regular-season-position key inside every playoff round, so keys 3 and 4 both flow from
+it. The code is `compareTiebreaker` and `buildPositionHistory` in `src/engine/standings.ts`, routed through
+`calculatePlayoffState` in `src/engine/playoffs.ts`.
 
-Corrected on 2026-10-05: the table first gave one eliminated driver for 2020 and one for 2022, where three drivers were
-level on points and top-ten finishes in each.
+Before increment 2 the engine counted only P1 to P10 and then left the order to sort stability, which is the order
+drivers first appear in the data. That decided five real Round 1 eliminations arbitrarily, in 2020, 2022 and 2023. The
+full rule decides them on track, which moved four completed seasons, including the 2020 champion (Hamilton to
+Verstappen). Every change is listed season by season in
+`docs/decisions/0006-full-classification-countback-golden-changes.md`.
 
-The About page already promises the full F1 countback, so today it promises more than the code does.
-
-Proposals for the owner to confirm. Each sub-question needs an answer before increment 2 can encode it.
-
-1. Which races the countback counts. Proposal: the races of the round being decided, because those are the only races
-   its points come from. The alternative is the whole season so far, which would hand the stronger regular-season driver
-   a second advantage (inferred).
-2. How deep it counts. Proposal: every classified position. The FIA text sets no cut-off at tenth; that its places are
-   classified positions only is our reading of the text, not its words (inferred). Classification comes from Jolpica's
-   `positionText`, so a classified driver who retired keeps the position. A tie on 0 points, like those of 2020 and
-   2022, would then go to whoever finished higher outside the points.
-3. Whether sprint finishes count. The FIA countback counts places "in a race" from 2021 (Art. 7.2 of the 2021 to 2025
-   Sporting Regulations; 2026 Section A, A2.1.4c), and the regulations call a sprint a sprint session, so F1 leaves
-   sprints out. Proposal: follow F1 and leave them out. The alternative counts sprint places after race places, on the
-   grounds that a round's points include sprint points.
-4. How a tie in the regular-season standings is broken, since "regular-season position" cannot be its own fallback.
-   Option A: the order of the official F1 standings after the last regular-season race, read from Jolpica's driver
-   standings for that round. Nothing fetches the standings today, so Option A adds a request the data script does not
-   make yet, and a place in each season file to keep the answer. Option B: a published rule of our own, such as
-   countback over the regular-season races, then the same countback over qualifying results as the 2026 regulations do
-   (Section A, A2.1.4c iv), then a fixed last key such as the driver's permanent number. The 2026 text has no step after
-   the qualifying count, so that last key would be ours in every season. Proposal: Option A, because it gives the same
-   order fans see in the official table and leaves the project nothing to invent.
+Corrected on 2026-10-05: an earlier draft of this section's eliminations table gave one eliminated driver each for 2020
+and 2022, where three drivers were level in each.
 
 ### Final standings
 
@@ -149,7 +140,8 @@ scoring, and what they score after elimination sets their place within their gro
 | 9th and 10th | Round 1 through Final points                                                     |
 | 11th onwards | Regular-season points plus all playoff points                                    |
 
-Ties inside any of these groups follow the tie order above (target).
+Ties inside any of these groups follow the tie chain above, which every ordering in the engine now routes through
+(increment 2).
 
 ### Calendar changes
 

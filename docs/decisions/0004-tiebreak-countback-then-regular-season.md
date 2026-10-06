@@ -86,7 +86,10 @@ The owner answered the four sub-questions. The proposals that were put, with the
 - Some historical eliminations may change, starting with the five in the table, which would be decided by where the
   drivers finished in the round's races. A change can cascade: the driver who now advances races in the next round, so
   that round's outcome can move too (inferred). Increment 2 computes the new outcomes, updates the golden tests on
-  purpose, and lists every change in its decision record.
+  purpose, and lists every change in its decision record. That record is
+  [0006](0006-full-classification-countback-golden-changes.md): the full rule moved four completed seasons, 2020 (the
+  champion flips from Hamilton to Verstappen), 2021, 2022 and 2023, with the before/after and the deciding rule for each
+  case there.
 - Increment 1 brings in regular-season position as the last key, after today's top-ten count, for 2026 only: the drop
   zone, and any 2026 round that completes before increment 2 lands. Completed seasons keep today's ordering until
   increment 2 changes them all at once under the full rule, so increment 1's golden tests stay unchanged and no past
