@@ -160,20 +160,27 @@ export function Header(): React.ReactElement {
 
               {/* Seasons Dropdown */}
               <Box
+                component="button"
+                type="button"
+                id="season-button"
                 onClick={handleSeasonMenuOpen}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   cursor: 'pointer',
+                  border: 'none',
+                  background: 'none',
+                  p: 0,
+                  font: 'inherit',
                   color: isSeasonPage ? 'primary.main' : 'text.primary',
                   fontWeight: isSeasonPage ? 600 : 400,
                   '&:hover': { color: 'primary.main' },
                 }}
                 aria-controls={seasonMenuOpen ? 'season-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={seasonMenuOpen ? 'true' : undefined}
+                aria-haspopup="menu"
+                aria-expanded={seasonMenuOpen}
               >
-                <Typography sx={{ fontWeight: 'inherit', color: 'inherit' }}>
+                <Typography component="span" sx={{ fontWeight: 'inherit', color: 'inherit' }}>
                   {currentPageYear ? `${currentPageYear} Season` : 'Seasons'}
                 </Typography>
                 <ChevronDown size={18} style={{ marginLeft: 4 }} />
@@ -184,7 +191,7 @@ export function Header(): React.ReactElement {
                 anchorEl={seasonAnchor}
                 open={seasonMenuOpen}
                 onClose={handleSeasonMenuClose}
-                MenuListProps={{ 'aria-labelledby': 'season-button' }}
+                slotProps={{ list: { 'aria-labelledby': 'season-button' } }}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'left' }}
               >

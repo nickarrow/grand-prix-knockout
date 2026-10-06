@@ -83,6 +83,15 @@ export function PhaseSection({
   const mode = theme.palette.mode;
   const eliminationColor = mode === 'dark' ? ELIMINATION_COLOR.dark : ELIMINATION_COLOR.light;
 
+  // Toggle the section from the keyboard. Space is prevented so the page does
+  // not scroll, matching native button behaviour.
+  const handleToggleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setExpanded((prev) => !prev);
+    }
+  };
+
   const phaseLabel = getPhaseLabel(type, didAdvance);
   const isNonAdvancer = type === 'playoffs' && didAdvance === false;
   const wasEliminated = eliminatedInRound !== null;
@@ -130,7 +139,12 @@ export function PhaseSection({
     >
       {/* Phase header - clickable to expand/collapse */}
       <Box
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={`${phaseLabel}, show races`}
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={handleToggleKeyDown}
         sx={{
           display: 'flex',
           alignItems: 'center',

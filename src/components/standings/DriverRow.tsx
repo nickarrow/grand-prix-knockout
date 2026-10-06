@@ -45,6 +45,15 @@ export function DriverRow({
   const theme = useTheme();
   const mode = theme.palette.mode;
 
+  // Toggle the detail from the keyboard. Space is prevented so the page does
+  // not scroll, matching native button behaviour.
+  const handleToggleKeyDown = (event: React.KeyboardEvent<HTMLTableRowElement>): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setExpanded((prev) => !prev);
+    }
+  };
+
   const { rounds, qualifiedDrivers, champion } = playoffState;
   const didQualify = qualifiedDrivers.includes(driver.driverId);
   const isChampion = champion === driver.driverId;
@@ -162,7 +171,12 @@ export function DriverRow({
   return (
     <>
       <TableRow
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={`${driver.firstName} ${driver.lastName}, show race-by-race detail`}
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={handleToggleKeyDown}
         sx={{
           cursor: 'pointer',
           // Only apply hover on devices that support it (not touch)

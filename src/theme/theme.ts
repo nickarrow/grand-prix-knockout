@@ -1,6 +1,29 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles';
 
-import { palette } from './palette';
+import { palette, FOCUS_RING_COLOR } from './palette';
+
+const FOCUS_OUTLINE_WIDTH = 2; // px
+const FOCUS_OUTLINE_OFFSET = 2; // px
+
+// A single visible focus ring for every keyboard-focused interactive control.
+// Driven by :focus-visible so it shows for keyboard users without appearing on
+// pointer clicks. The colour is passed per mode so each theme can meet contrast.
+function focusVisibleOverrides(mode: 'light' | 'dark'): ThemeOptions['components'] {
+  const ringColor = mode === 'dark' ? FOCUS_RING_COLOR.dark : FOCUS_RING_COLOR.light;
+  return {
+    MuiCssBaseline: {
+      styleOverrides: {
+        // Doubled pseudo-class raises specificity to (0,2,0) so the ring beats
+        // MUI component classes that reset outline to 0, e.g. MuiTableRow-root
+        // on the keyboard-focusable driver rows.
+        ':focus-visible:focus-visible': {
+          outline: `${FOCUS_OUTLINE_WIDTH}px solid ${ringColor}`,
+          outlineOffset: `${FOCUS_OUTLINE_OFFSET}px`,
+        },
+      },
+    },
+  };
+}
 
 const baseThemeOptions: ThemeOptions = {
   typography: {
@@ -64,6 +87,10 @@ const baseThemeOptions: ThemeOptions = {
 
 export const lightTheme = createTheme({
   ...baseThemeOptions,
+  components: {
+    ...baseThemeOptions.components,
+    ...focusVisibleOverrides('light'),
+  },
   palette: {
     mode: 'light',
     primary: palette.primary,
@@ -78,6 +105,10 @@ export const lightTheme = createTheme({
 
 export const darkTheme = createTheme({
   ...baseThemeOptions,
+  components: {
+    ...baseThemeOptions.components,
+    ...focusVisibleOverrides('dark'),
+  },
   palette: {
     mode: 'dark',
     primary: palette.primary,

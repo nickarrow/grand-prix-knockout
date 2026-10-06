@@ -43,6 +43,15 @@ export const ELIMINATION_COLOR = {
   dark: '#C62828', // Same dark red - consistent across modes
 } as const;
 
+// Visible focus indicator color (WCAG 2.2 AA: focus ring needs 3:1 against the
+// adjacent background). Racing red #E10600 measures ~4.0:1 on the light paper
+// (#FFFFFF) and ~4.6:1 on the dark default (#121212), so one value clears both
+// modes against the UI component contrast requirement.
+export const FOCUS_RING_COLOR = {
+  light: '#E10600',
+  dark: '#E10600',
+} as const;
+
 export const palette = {
   // Primary - Racing red
   primary: {
