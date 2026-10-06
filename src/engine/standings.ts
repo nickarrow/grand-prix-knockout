@@ -1,5 +1,6 @@
 // Standings calculation and tiebreaker logic
 
+import { PODIUM_POSITIONS } from 'src/constants';
 import type { Race, Driver, DriverStanding, RaceResult } from 'src/types';
 
 import { calculateTotalPoints } from './points';
@@ -58,7 +59,7 @@ function countWins(driverId: string, races: Race[]): number {
 function countPodiums(driverId: string, races: Race[]): number {
   return races.filter((race) => {
     const result = race.results.find((r) => r.driverId === driverId);
-    return result?.position && result.position <= 3;
+    return result?.position && result.position <= PODIUM_POSITIONS;
   }).length;
 }
 

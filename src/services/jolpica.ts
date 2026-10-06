@@ -2,14 +2,7 @@
 // Docs: https://api.jolpi.ca/ergast/f1/
 
 import { JOLPICA_API_BASE_URL, FASTEST_LAP_ELIGIBILITY_POSITION } from 'src/constants';
-import type {
-  Driver,
-  Race,
-  RaceResult,
-  QualifyingResult,
-  SprintResult,
-  RaceCalendar,
-} from 'src/types';
+import type { Race, RaceResult, QualifyingResult, SprintResult, RaceCalendar } from 'src/types';
 
 // Jolpica API response types (nested structure)
 interface JolpicaResponse<T> {
@@ -219,29 +212,4 @@ export async function fetchSeasonResults(year: number): Promise<Race[]> {
   }
 
   return races;
-}
-
-// Extract unique drivers from race results
-export function extractDriversFromRaces(races: Race[]): Driver[] {
-  const driverMap = new Map<string, Driver>();
-
-  for (const race of races) {
-    for (const result of race.results) {
-      if (!driverMap.has(result.driverId)) {
-        // Find the driver info from the raw result data
-        // For now, create a basic driver entry - will be enhanced with full API data
-        driverMap.set(result.driverId, {
-          driverId: result.driverId,
-          code: result.driverId.substring(0, 3).toUpperCase(),
-          firstName: '',
-          lastName: result.driverId,
-          nationality: '',
-          constructorId: '',
-          constructorName: '',
-        });
-      }
-    }
-  }
-
-  return Array.from(driverMap.values());
 }

@@ -8,7 +8,7 @@ import { ChevronRight } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 
 import type { Driver, PlayoffState, Race } from 'src/types';
-import { getTeamColor } from 'src/constants';
+import { F1_COLUMN_WIDTH, getTeamColor } from 'src/constants';
 import { ELIMINATION_COLOR } from 'src/theme/palette';
 import {
   getPlayoffRoundPoints,
@@ -21,8 +21,7 @@ import { DriverDetail } from './DriverDetail';
 
 const CHEVRON_ICON_SIZE = 14;
 const DRIVER_CODE_WIDTH = 28;
-const DRIVER_NAME_WIDTH = 120;
-const F1_COLUMN_WIDTH = 40;
+const DRIVER_NAME_WIDTH = 150;
 
 interface DriverRowProps {
   driver: Driver;
@@ -215,7 +214,14 @@ export function DriverRow({
             <Typography
               variant="body2"
               fontWeight={500}
-              sx={{ display: { xs: 'none', md: 'block' }, width: DRIVER_NAME_WIDTH }}
+              title={`${driver.firstName} ${driver.lastName}`}
+              sx={{
+                display: { xs: 'none', md: 'block' },
+                width: DRIVER_NAME_WIDTH,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
             >
               {driver.firstName} {driver.lastName}
             </Typography>

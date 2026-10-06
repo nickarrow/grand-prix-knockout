@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { Race, RaceCalendar } from 'src/types';
 
-import { fetchSeasonCalendar, fetchRaceResults, fetchSeasonResults } from './jolpica';
+import { fetchSeasonCalendar, fetchSeasonResults } from './jolpica';
 import { loadStaticSeasonData } from './static-data';
 
 // Query key factories for consistent cache keys
@@ -17,11 +17,6 @@ export const queryKeys = {
     results: (year: number) => [...queryKeys.seasons.all, 'results', year] as const,
     standingOrder: (year: number) => [...queryKeys.seasons.all, 'standingOrder', year] as const,
     full: (year: number) => [...queryKeys.seasons.all, 'full', year] as const,
-  },
-  // Race-related keys
-  races: {
-    all: ['races'] as const,
-    detail: (year: number, round: number) => [...queryKeys.races.all, year, round] as const,
   },
 } as const;
 
@@ -68,16 +63,6 @@ async function getSeasonStandingOrder(year: number): Promise<string[]> {
   return staticData?.regularSeasonStandingOrder ?? [];
 }
 
-// Fetch single race with error handling
-async function getRaceResults(year: number, round: number): Promise<Race | null> {
-  try {
-    return await fetchRaceResults(year, round);
-  } catch (error) {
-    console.error(`Failed to fetch race ${year}/${round}:`, error);
-    throw error;
-  }
-}
-
 // TanStack Query hooks
 
 export function useSeasonCalendar(
@@ -93,16 +78,6 @@ export function useSeasonResults(year: number): ReturnType<typeof useQuery<Race[
   return useQuery({
     queryKey: queryKeys.seasons.results(year),
     queryFn: () => getSeasonResults(year),
-  });
-}
-
-export function useRaceResults(
-  year: number,
-  round: number
-): ReturnType<typeof useQuery<Race | null, Error>> {
-  return useQuery({
-    queryKey: queryKeys.races.detail(year, round),
-    queryFn: () => getRaceResults(year, round),
   });
 }
 

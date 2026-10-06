@@ -27,7 +27,7 @@ function focusVisibleOverrides(mode: 'light' | 'dark'): ThemeOptions['components
 
 const baseThemeOptions: ThemeOptions = {
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontSize: '2.5rem',
       fontWeight: 700,

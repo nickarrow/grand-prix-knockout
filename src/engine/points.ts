@@ -1,12 +1,16 @@
 // Points calculation utilities
 // Uses official F1 points from the API data directly (no custom recalculation)
 
-import { RACE_POINTS_POSITIONS, SPRINT_POINTS_POSITIONS } from 'src/constants';
+import {
+  RACE_POINTS,
+  SPRINT_POINTS,
+  RACE_POINTS_POSITIONS,
+  SPRINT_POINTS_POSITIONS,
+} from 'src/constants';
 import type { Race } from 'src/types';
 
 // Get expected points for a race position (used for tiebreaker/reference only)
 export function getRacePoints(position: number | null): number {
-  const RACE_POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1] as const;
   if (position === null || position < 1 || position > RACE_POINTS_POSITIONS) {
     return 0;
   }
@@ -15,7 +19,6 @@ export function getRacePoints(position: number | null): number {
 
 // Get expected points for a sprint position (used for reference only)
 export function getSprintPoints(position: number | null): number {
-  const SPRINT_POINTS = [8, 7, 6, 5, 4, 3, 2, 1] as const;
   if (position === null || position < 1 || position > SPRINT_POINTS_POSITIONS) {
     return 0;
   }

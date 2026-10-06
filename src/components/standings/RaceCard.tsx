@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import type { Race } from 'src/types';
-import { PODIUM_POSITIONS, POLE_POSITION } from 'src/constants';
+import { PODIUM_POSITIONS, WINNING_POSITION } from 'src/constants';
 import { seasonHasFastestLapBonus } from 'src/constants/points';
 import { POINTS_COLORS } from 'src/theme/palette';
 
@@ -59,7 +59,7 @@ export function RaceCard({ race, driverId, isGhost = false }: RaceCardProps): Re
   const position = raceResult?.position ?? null;
   const status = raceResult?.status ?? 'Unknown';
   const isPodium = position !== null && position <= PODIUM_POSITIONS;
-  const isWin = position === POLE_POSITION;
+  const isWin = position === WINNING_POSITION;
 
   return (
     <Box

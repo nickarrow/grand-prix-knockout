@@ -3,7 +3,6 @@ export {
   queryKeys,
   useSeasonCalendar,
   useSeasonResults,
-  useRaceResults,
   useSeasonStandingOrder,
   useSeasonData,
 } from './api';

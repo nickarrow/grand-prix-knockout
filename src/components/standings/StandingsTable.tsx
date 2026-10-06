@@ -13,12 +13,11 @@ import {
 } from '@mui/material';
 
 import type { PlayoffState, Race, DriverStanding } from 'src/types';
+import { F1_COLUMN_WIDTH } from 'src/constants';
 import { getEliminationRound, getBracketPoints, isRegularSeasonComplete } from 'src/utils';
 
 import { DriverRow } from './DriverRow';
 import { DropZoneNotice } from './DropZoneNotice';
-
-const F1_COLUMN_WIDTH = 40;
 
 interface StandingsTableProps {
   playoffState: PlayoffState;
