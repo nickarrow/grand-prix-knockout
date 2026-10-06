@@ -43,9 +43,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // (seconds or an HTTP date) when present and falling back to exponential backoff
 // when it is absent. Throws on a 4xx other than 429 and after exhausting retries.
 async function fetchJson(url) {
-  let attempt = 0;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (let attempt = 0; ; attempt += 1) {
     let response;
     try {
       response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
@@ -54,7 +52,6 @@ async function fetchJson(url) {
         throw new Error(`Network error after ${attempt} retries for ${url}: ${networkError.message}`);
       }
       await delay(backoffDelay(attempt));
-      attempt += 1;
       continue;
     }
 
@@ -70,7 +67,6 @@ async function fetchJson(url) {
     const waitMs = retryAfterMs(response) ?? backoffDelay(attempt);
     console.warn(`Retrying ${url} after ${waitMs}ms (status ${response.status}, attempt ${attempt + 1}).`);
     await delay(waitMs);
-    attempt += 1;
   }
 }
 
