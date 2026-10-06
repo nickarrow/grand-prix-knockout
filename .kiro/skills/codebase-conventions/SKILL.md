@@ -202,7 +202,12 @@ export const JOLPICA_API_BASE_URL = isDev
   that is only partly run.
 - Keep tests focused and independent of each other and of the clock.
 - From increment 1, golden tests pin every completed season's outcome. A change that moves a golden result needs the
-  decision record that `AGENTS.md` asks for.
+  decision record that `AGENTS.md` asks for. They pin the outcomes as today's engine produces them, including the five
+  Round 1 eliminations of 2020, 2022 and 2023 that sort stability decided
+  (`docs/decisions/0004-tiebreak-countback-then-regular-season.md`). If increment 2's rule moves them, it does so on
+  purpose and lists each one.
+- To see the interface at a given point in a season, replay it by truncating its bundled data. The technique is in the
+  `review` skill, under "Replaying a season by truncating its bundled data".
 
 ## Accessibility
 

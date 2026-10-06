@@ -9,6 +9,9 @@ nothing back, a custom agent is the first thing to suspect.
 
 Workflow step sessions run as custom agents. On 2026-10-05 one received the always-on steering file and no list of
 skills, so `.kiro/steering/read-first.md` stays always on and points those sessions at this file and at the skill files.
+The same day two step sessions opened on the main checkout, while their work was in a worktree, received the main
+checkout's steering and not the worktree's. So a workflow that works in a worktree names this file and the worktree
+path in every step's prompt rather than relying on steering.
 
 This file holds what is true in every session. Anything that only matters sometimes is a skill under `.kiro/skills/`,
 which loads when it is relevant.
