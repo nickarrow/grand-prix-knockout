@@ -14,12 +14,12 @@ import type { SelectChangeEvent } from '@mui/material';
 import { ArrowRight } from 'lucide-react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
-import { usePlayoffData } from 'src/hooks';
+import { useKnockoutData } from 'src/hooks';
 import { StandingsTable } from 'src/components/standings';
 import { CURRENT_SEASON, HISTORICAL_SEASONS } from 'src/constants';
 
 export function HomePage(): React.ReactElement {
-  const { playoffState, races, isLoading, error } = usePlayoffData(CURRENT_SEASON);
+  const { knockoutState, races, isLoading, error } = useKnockoutData(CURRENT_SEASON);
   const navigate = useNavigate();
 
   const handleSeasonChange = (event: SelectChangeEvent<string>): void => {
@@ -137,14 +137,14 @@ export function HomePage(): React.ReactElement {
 
           {error && <Alert severity="error">Failed to load standings: {error.message}</Alert>}
 
-          {!isLoading && !error && (!playoffState || races.length === 0) && (
+          {!isLoading && !error && (!knockoutState || races.length === 0) && (
             <Alert severity="info">
               The {CURRENT_SEASON} season hasn't started yet. Check back once races begin!
             </Alert>
           )}
 
-          {!isLoading && !error && playoffState && races.length > 0 && (
-            <StandingsTable playoffState={playoffState} allRaces={races} />
+          {!isLoading && !error && knockoutState && races.length > 0 && (
+            <StandingsTable playoffState={knockoutState} allRaces={races} />
           )}
         </Paper>
       </Box>

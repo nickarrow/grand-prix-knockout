@@ -1,2 +1,2 @@
 // Custom hooks exports
-export { usePlayoffData } from './usePlayoffData';
+export { useKnockoutData } from './useKnockoutData';

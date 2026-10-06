@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material/styles';
 import { Trophy } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
-import { usePlayoffData } from 'src/hooks';
+import { useKnockoutData } from 'src/hooks';
 import { StandingsTable } from 'src/components/standings';
 import { PlayoffExplainer } from 'src/components/common';
 import { hasStaticData } from 'src/services';
@@ -18,7 +18,7 @@ export function SeasonPage(): React.ReactElement {
 
   // Guard the :year param before any data request. An unparseable year
   // (Number.isNaN) or a season the site does not cover renders the not-found /
-  // no-data page and never reaches usePlayoffData, so Jolpica is never called
+  // no-data page and never reaches useKnockoutData, so Jolpica is never called
   // for an unsupported year.
   if (Number.isNaN(parsedYear) || !hasStaticData(parsedYear)) {
     return <NotFoundPage />;
@@ -31,7 +31,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
   const theme = useTheme();
   const mode = theme.palette.mode;
 
-  const { playoffState, races, calendar, isLoading, error } = usePlayoffData(seasonYear);
+  const { knockoutState, races, calendar, isLoading, error } = useKnockoutData(seasonYear);
 
   if (isLoading) {
     return (
@@ -56,7 +56,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
   }
 
   // No data yet (e.g., 2026 season hasn't started)
-  if (!playoffState || races.length === 0) {
+  if (!knockoutState || races.length === 0) {
     return (
       <Container maxWidth="lg">
         <Box sx={{ py: { xs: 2, md: 4 } }}>
@@ -74,14 +74,14 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
 
   // Name of the race that opens the playoffs (first playoff round number).
   const playoffOpenerName = (): string => {
-    const opener = calendar.find((entry) => entry.round === playoffState.playoffStartRace);
-    return opener?.raceName ?? `Race ${playoffState.playoffStartRace}`;
+    const opener = calendar.find((entry) => entry.round === knockoutState.knockoutStartRace);
+    return opener?.raceName ?? `Race ${knockoutState.knockoutStartRace}`;
   };
 
   // Build status text based on season state. Mirrors the status-line target in
   // docs/design.md.
   const getStatusText = (): string => {
-    const { status, totalRaces, regularSeasonRaces, rounds } = playoffState;
+    const { status, totalRaces, regularSeasonRaces, rounds } = knockoutState;
     const completedRaces = races.length;
 
     if (status === 'completed') {
@@ -127,12 +127,12 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
 
   // Get champion info for completed seasons
   const getChampionInfo = (): { code: string; constructorId: string } | null => {
-    if (playoffState.status !== 'completed' || !playoffState.champion) {
+    if (knockoutState.status !== 'completed' || !knockoutState.champion) {
       return null;
     }
-    const finalRound = playoffState.rounds[playoffState.rounds.length - 1];
+    const finalRound = knockoutState.rounds[knockoutState.rounds.length - 1];
     const championStanding = finalRound?.standings.find(
-      (s) => s.driver.driverId === playoffState.champion
+      (s) => s.driver.driverId === knockoutState.champion
     );
     return championStanding
       ? { code: championStanding.driver.code, constructorId: championStanding.driver.constructorId }
@@ -146,7 +146,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
     <Container maxWidth="lg">
       <Box sx={{ py: { xs: 2, md: 4 } }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          {playoffState.season} Grand Prix Playoffs
+          {knockoutState.season} Grand Prix Playoffs
         </Typography>
 
         <PlayoffExplainer compact />
@@ -192,7 +192,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
           )}
         </Box>
 
-        <StandingsTable playoffState={playoffState} allRaces={races} />
+        <StandingsTable playoffState={knockoutState} allRaces={races} />
       </Box>
     </Container>
   );
