@@ -538,5 +538,45 @@ the most to show.
 - Renaming the repository and the Cloudflare project.
 - Whatever announcement goes with the relaunch.
 
+### Done, 2026-10-06
+
+On the branch `increment-4-deep-rename` in the main checkout, six commits deliver a deep code and content rename to
+Grand Prix Knockout. `0008` records the name. The engine, constants and types moved from playoff to knockout
+(`playoffs.ts` to `knockout.ts`, `playoff-schedule.ts` to `knockout-schedule.ts`, `playoffs.test.ts` to
+`knockout.test.ts`, `calculatePlayoffState` to `calculateKnockoutState`); the hook `usePlayoffData` became
+`useKnockoutData`; `PlayoffExplainer.tsx` became `KnockoutExplainer.tsx`; and the identifiers in components, pages and
+utils followed. User-facing copy and meta tags were rebranded, the NASCAR comparison was dropped from `index.html` and
+the copy, and `README`, `CONTRIBUTING` and `CHANGELOG` were refreshed. The decision to make this a deep rename, rather
+than a surface relabel, was the owner's: six months on, "playoff" in the code would read as a different concept from the
+name on the site.
+
+Observed on the final run from the repo root. `npm test`: 102 passed across 7 files, the golden suite 7 of 7. `npm run
+build`: `tsc -b` and Vite both clean, 2699 modules, no 500 kB chunk warning, the chunk sizes the increment-3 vendor
+split already produced (mui 262.12 kB, index 195.53 kB, the per-season data chunks). `npm run lint`: exit 0, no
+warnings. `npx prettier --check --end-of-line auto "src/**/*.{ts,tsx,css,json}"`: all matched files use Prettier style.
+
+No outcome moved. The golden baselines are the record of truth, and the only edit to `golden.test.ts` on this branch is
+the import and call rename from `calculatePlayoffState` to `calculateKnockoutState`, which Prettier reflowed across three
+lines. Not one pinned qualifier, elimination or champion changed, which the passing 7-of-7 golden suite confirms. The
+file's SHA256 changed as a result of the function rename alone, from the pre-rename `1E65F611...F46988` baseline named in
+the increment brief to `CB4A8B91...E4EBD3C`; the change is the two-line rename, nothing in the data.
+
+`git grep -n -i playoff -- src` leaves only the `SeasonStatus 'playoffs'` string literal in `src/types/index.ts` and its
+uses in `knockout.ts`, `knockout.test.ts` and `utils/index.test.ts`, plus generic-English comments and test
+descriptions in `golden.test.ts`. The status value stays `'playoffs'` because it is read by code that is not part of
+this rename and changing it would be a behaviour change, not a rename.
+
+Deliberately deferred to the owner-run external-rename stage, and verified untouched on this branch: the `package.json`
+name (`grand-prix-playoffs`), the `github.com/nickarrow/grand-prix-playoffs` URLs in the Footer, the About page and the
+data-fetch User-Agent, the `grandprixplayoffs.com` URLs in `index.html`, the Cloudflare project name in `wrangler.toml`,
+`.github/workflows/deploy.yml` and `0007`, the `data/<year>.json` files, and the `gpp-` localStorage keys
+(`gpp-explainer-collapsed`, `gpp-theme`). `git diff --stat origin/main..HEAD` lists no change under those paths. Those
+rename the repository, the domain, the Cloudflare project and anything that would strand stored data or break a live
+URL, so they belong with the owner's registrar and Cloudflare access, not in this branch.
+
+Still unverified. Nothing runs the tests before a merge to `main` deploys, so the live relaunch is only as green as this
+run. The external set above is unverified by definition until the owner runs it. The branch is not pushed and not
+merged; the owner reviews it in the editor and merges locally.
+
 [gh-token]: https://docs.github.com/en/actions/concepts/security/github_token
 [ubuntu26]: https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration/
