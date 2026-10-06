@@ -312,26 +312,28 @@ Recommendation: Grand Prix Knockout, from the orchestrator. Decided in increment
 
 ### 2. Deploy gating
 
-Cloudflare deploys every push to `main`, including the data workflow's, and nothing runs the tests first. Options:
+Cloudflare deploys every push to `main`, including the data workflow's, and nothing runs the tests first. This is a
+solo project with no pull requests, so the gate cannot sit on a merge request. Options:
 
-- Run the checks on every pull request and protect `main` so nothing merges without them.
-- Deploy from a GitHub Action once the checks pass. Wrangler's direct upload needs a Cloudflare API token stored in
-  GitHub.
-- Have the data workflow open a pull request instead of pushing.
+- Stop Cloudflare building on push, and deploy from a GitHub Action that runs the checks first and only then uploads.
+  Wrangler's direct upload needs a Cloudflare API token stored in GitHub.
+- Keep Cloudflare on push, and accept that the branch check (increment 1) plus the data workflow's own tests are the
+  safeguard, with no hard gate before a human merges to `main`.
 
-Inferred: protecting `main` would also stop the data workflow pushing to it, so the first option needs the third. No
-recommendation yet. Decided in increment 3.
+Inferred: a real gate means moving the deploy behind a check, which is the first option. No recommendation yet. Decided
+in increment 3.
 
-Two checks come before that, in increment 1, chosen by the orchestrator on 2026-10-05: the data workflow runs the tests
-and the build against the data it fetched before it commits, and a check runs on every pull request. The first has to
-live inside the data workflow, because a push made with the workflow's `GITHUB_TOKEN` starts no other workflow
-([GitHub docs][gh-token]). Neither check stops a merge. That is still this question.
+One safeguard comes before that, in increment 1, chosen by the orchestrator on 2026-10-05: the data workflow runs the
+tests and the build against the data it fetched before it commits, and a branch check runs the same on every push to a
+non-`main` branch so the owner sees the result before merging. The data workflow has to run its own checks inline,
+because a push made with the workflow's `GITHUB_TOKEN` starts no other workflow ([GitHub docs][gh-token]). Neither stops
+the owner merging. That hard gate is still this question.
 
 ### 3. Cloudflare Pages settings
 
 The build command, Node version and preview branches live in the Cloudflare dashboard, not in the repository. The owner
 will supply them. `docs/DEPLOYMENT.md` records `npm run build`, output `dist`, Node 20 "auto-detected", and a preview
-for every pull request; none of that has been checked against the dashboard.
+for every branch; none of that has been checked against the dashboard.
 
 ### 4. The tie sub-questions and the calendar proposal
 

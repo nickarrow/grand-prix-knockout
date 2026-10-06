@@ -9,9 +9,6 @@ nothing back, a custom agent is the first thing to suspect.
 
 Workflow step sessions run as custom agents. On 2026-10-05 one received the always-on steering file and no list of
 skills, so `.kiro/steering/read-first.md` stays always on and points those sessions at this file and at the skill files.
-The same day two step sessions opened on the main checkout, while their work was in a worktree, received the main
-checkout's steering and not the worktree's. So a workflow that works in a worktree names this file and the worktree
-path in every step's prompt rather than relying on steering.
 
 This file holds what is true in every session. Anything that only matters sometimes is a skill under `.kiro/skills/`,
 which loads when it is relevant.
@@ -49,9 +46,16 @@ Where things live:
 How it ships. Cloudflare Pages builds and deploys every push to `main`. The data workflow commits to `main` every Monday
 at 06:00 UTC. Anything on `main` is live within minutes, and nothing runs the tests before it goes out.
 
-Git rules. Never push to `main`. One branch and one pull request per feature. Commit subjects follow Conventional
-Commits (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, with a scope where it helps, as in `fix(engine): ...`).
-Show the commit message before committing. Husky runs lint-staged on every commit; let it.
+Git rules. This is a solo project with one maintainer, so the workflow is deliberately light. Do the work on a feature
+branch off `main`, one branch per feature, in the main checkout rather than a git worktree. Never push to `main`, and
+never merge a branch yourself: the owner reviews the branch in the editor and merges it locally. No pull requests, no
+`gh pr create`, no worktrees under `.worktrees/`. Commit subjects follow Conventional Commits (`feat`, `fix`, `docs`,
+`refactor`, `test`, `chore`, with a scope where it helps, as in `fix(engine): ...`). Show the commit message before
+committing. Husky runs lint-staged on every commit; let it.
+
+For a multi-step agent run, work on one shared feature branch in the main checkout and commit as you go. The owner is
+the only maintainer and reads the branch there, so keeping the work on the checkout they have open is the point. A
+worktree hides the work in a folder they never open, which is overkill here.
 
 ## What is public here, and what never goes in
 
@@ -112,7 +116,7 @@ Several agents checking one shared opinion is not review. Treat every finding as
 say how many you threw out. When reviewing, report rather than fix. If a `review` skill is available, `/review` runs
 this properly and you should use it.
 
-Show a commit message before committing it, and put one feature in a pull request rather than six.
+Show a commit message before committing it, and keep one feature to one branch rather than piling six onto it.
 
 ## How to write it down
 

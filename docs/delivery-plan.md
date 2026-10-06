@@ -46,15 +46,16 @@ February, "add eliminated label under red points", touching `DriverRow.tsx` and 
 ## Standing constraints
 
 - The five rules under "What has to stay true" in `AGENTS.md` hold in every increment.
-- Never push to `main`. One branch and one pull request per increment, or per feature inside one. The owner merges.
-- Anything merged to `main` is live within minutes. From increment 1 a check runs on every pull request and the data
-  workflow runs the tests and the build before it commits, but nothing stops a merge until increment 3's branch
-  protection and deploy gate land. Every merge is a release.
+- Never push to `main`. One feature branch per increment, in the main checkout, no worktree. The owner reviews the
+  branch in the editor and merges it locally. No pull requests: this is a solo project.
+- Anything merged to `main` is live within minutes. From increment 1 a check runs on every branch push and the data
+  workflow runs the tests and the build before it commits, but nothing stops a merge until increment 3's deploy gate
+  lands. Every merge is a release.
 - The data workflow commits to `main` every Monday at 06:00 UTC, so a branch that touches `data/` should expect
   conflicts in `data/2026.json`. Those runs also set the deadlines: 12 October after Singapore, 26 October after the
   United States Grand Prix, 7 December after the Final.
 - From increment 1, golden tests pin every completed season. A change to one needs a decision record.
-- An increment that changes the design updates `docs/design.md` in the same pull request.
+- An increment that changes the design updates `docs/design.md` on the same branch.
 - Anything that touches the interface is mobile first and meets WCAG 2.2 AA.
 - `/review` runs before anything substantial merges.
 
@@ -97,7 +98,7 @@ and their sources come first.
 
 ### Needs from you
 
-- Review and merge the pull request.
+- Review the `docs/adopt-bootstrap` branch in the editor and merge it locally.
 - Answer the four tie sub-questions and the calendar proposal in `docs/design.md` before increment 2 starts.
 - Decide what happens to `feat/elimination-label` and the stash before increment 1 starts. The branch's one commit
   changes `DriverRow.tsx` and `palette.ts`, which draw the red elimination points that increment 1 changes, and the
@@ -154,8 +155,7 @@ Put to the owner, 4. The orchestrator answered on the owner's behalf on 2026-10-
 - The calendar lock not enforced during Round 1 (red team, blocking): no lock yet, but increment 1's validation refuses a
   changed calendar. `0005`, `docs/design.md` and increment 1 updated.
 - Both deadline increments ship unchecked (red team, should fix): the data workflow runs the tests and the build before
-  it commits, and a check runs on pull requests, both in increment 1. Branch protection and the deploy gate stay in
-  increment 3.
+  it commits, and a branch check runs the same, both in increment 1. The deploy gate stays in increment 3.
 - Increment 1 overloaded (red team, should fix): declined. The permissions, the failure issue and the runner pin stay,
   with the issue step behind `if: failure()`.
 
@@ -185,14 +185,21 @@ Rejected, 9:
 Found while confirming, and not one of the 33: the sort-stability tables in `docs/design.md` and `0004` gave one
 eliminated driver for 2020 and for 2022, where three drivers were level in each. Both corrected, with the date.
 
+Correction, 2026-10-06: this increment-0 run used a git worktree and assumed pull requests, and the owner wanted
+neither. The worktree was removed, the branch checked out in the main checkout, and the Git rules in `AGENTS.md` and
+`.kiro/steering/read-first.md` rewritten to say the work goes on a feature branch in the main checkout with no worktree
+and no pull request. The two entries above that credited a worktree note to `AGENTS.md` and `read-first.md` are
+superseded by that rewrite. The "pull request" references through this plan and `docs/design.md` became branch pushes
+and local merges in the same pass.
+
 ## Increment 1: ready for Singapore
 
 Merged and deployed before the data run on Monday 2026-10-12 at 06:00 UTC. The Singapore Grand Prix on Sunday 11 October
 is round 17 of 23, a sprint weekend, and the first race of Round 1.
 
 On 2026-10-05, answering the review, the orchestrator added four things to this increment: regular-season position as
-the drop zone's last key, the calendar guard, the tests and the build inside the data workflow, and the pull-request
-check. It also kept the workflow hardening here rather than in a follow-up. The owner can overrule any of it at review.
+the drop zone's last key, the calendar guard, the tests and the build inside the data workflow, and the branch check.
+It also kept the workflow hardening here rather than in a follow-up. The owner can overrule any of it at review.
 
 ### Delivers
 
@@ -221,9 +228,10 @@ The data pipeline:
   and 19 November 2026 ([GitHub changelog, 17 September 2026][ubuntu26]), starting in the middle of Round 1.
 - A concurrency group, and a second Monday run as a retry if you want one (see Needs from you).
 
-Checks on pull requests:
+Branch checks (no pull requests, so these run on branch pushes):
 
-- A workflow that runs `npm run lint`, `npm run format:check`, `npm test` and `npm run build` on every pull request.
+- A workflow that runs `npm run lint`, `npm run format:check`, `npm test` and `npm run build` on every push to a branch
+  other than `main`, so the result is visible before the owner merges locally.
 - The Prettier failure in `src/pages/AboutPage.tsx` fixed, so the format check passes.
 
 The playoff display:
@@ -282,7 +290,7 @@ deterministic without touching a completed season, so the golden tests stay unch
 - The new workflow runs successfully on GitHub's runners on the feature branch, dispatched by the owner, with its test
   and build steps passing before the commit step. Run that way it pushes to the feature branch, as today's plain
   `git push` would, never to `main`, and it commits nothing when the data has not changed.
-- The pull request for this increment shows the new check passing.
+- The branch check for this increment passes on its last push before the owner merges.
 
 ### Needs from you
 
@@ -362,8 +370,9 @@ No race deadline. Lands before increment 4.
 - Bundle size: the main chunk is 612.79 kB.
 - A documentation refresh, including `docs/DEPLOYMENT.md`, which overlaps the design document and holds Cloudflare
   settings nobody has checked.
-- Branch protection and the deploy gate from open question 2 in `docs/design.md`, with a decision record. Increment 1's
-  pull-request check is what they would enforce.
+- The deploy gate from open question 2 in `docs/design.md`, with a decision record. Increment 1's branch check is what
+  it would enforce. With no pull requests, gating means a deploy path that runs the checks before `main` goes live,
+  rather than branch protection on a pull request.
 - The `hasSprintRace` bug: `static-data.ts` sets it true for rounds not yet run, because `undefined !== null`. Nothing
   reads it today.
 - The driver-name column wrapping on desktop.
@@ -384,7 +393,7 @@ not agreed separately).
   visible focus ring, and Enter opens and closes a driver row.
 - `/foo` and `/2019` show a not-found page and send no request to Jolpica.
 - `npm run format:check` passes, the build prints no chunk-size warning, and ESLint is clean.
-- A pull request with a failing test cannot reach production, however the gate is built.
+- A commit with a failing test cannot reach production, however the gate is built.
 - A search of `src/` for each removed name returns nothing.
 
 ### Needs from you

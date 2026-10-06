@@ -1,6 +1,6 @@
 ---
 name: codebase-conventions
-description: Use whenever reading, writing, reviewing, refactoring or testing code under src/ in this repository, including components, pages, hooks, the playoff engine, services, constants, theme, types and tests, and whenever a change touches package.json, tsconfig, ESLint or Prettier settings. Covers the stack and its versions, TypeScript and ESLint settings, folders, naming, imports, the no-magic-numbers rule, file sizes, MUI styling, TanStack Query, state, error handling, tests, accessibility checks and the pull request checklist.
+description: Use whenever reading, writing, reviewing, refactoring or testing code under src/ in this repository, including components, pages, hooks, the playoff engine, services, constants, theme, types and tests, and whenever a change touches package.json, tsconfig, ESLint or Prettier settings. Covers the stack and its versions, TypeScript and ESLint settings, folders, naming, imports, the no-magic-numbers rule, file sizes, MUI styling, TanStack Query, state, error handling, tests, accessibility checks and the pre-merge checklist.
 ---
 
 # How code is written here
@@ -36,7 +36,7 @@ From `package-lock.json` on 2026-10-05:
   `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax` and `erasableSyntaxOnly`. Indexing an array gives
   `T | undefined`, so handle the undefined case rather than asserting it away.
 - No `any`. ESLint fails on it. Use a proper type, or `unknown` with a type guard.
-- Explicit return types on every function. ESLint warns, and the PR checklist treats a warning as a failure.
+- Explicit return types on every function. ESLint warns, and the pre-merge checklist treats a warning as a failure.
 - Interfaces for object shapes, `type` for unions and primitives. Shared types live in `src/types/index.ts`.
 - Use `import type` for type-only imports, which `verbatimModuleSyntax` requires.
 - Prefer `const` over `let`, and never use `var`.
@@ -233,7 +233,9 @@ test(engine): add tiebreaker edge case tests
 chore(deps): update @mui/material
 ```
 
-## Pull request checklist
+## Pre-merge checklist
+
+Run these on the feature branch before the owner merges it to `main`. There are no pull requests here.
 
 - TypeScript compiles: `npm run build` runs `tsc -b`.
 - ESLint passes with no warnings: `npm run lint`.
