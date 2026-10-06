@@ -7,11 +7,11 @@ import { ChevronRight } from 'lucide-react';
 
 import { useTheme } from '@mui/material/styles';
 
-import type { Driver, PlayoffState, Race } from 'src/types';
+import type { Driver, KnockoutState, Race } from 'src/types';
 import { F1_COLUMN_WIDTH, getTeamColor } from 'src/constants';
 import { ELIMINATION_COLOR } from 'src/theme/palette';
 import {
-  getPlayoffRoundPoints,
+  getKnockoutRoundPoints,
   getEliminationRound,
   advancedViaTiebreaker,
   isDriverAtRisk,
@@ -28,7 +28,7 @@ interface DriverRowProps {
   position: number;
   regularSeasonPoints: number;
   officialPoints: number;
-  playoffState: PlayoffState;
+  knockoutState: KnockoutState;
   allRaces: Race[];
 }
 
@@ -37,7 +37,7 @@ export function DriverRow({
   position,
   regularSeasonPoints,
   officialPoints,
-  playoffState,
+  knockoutState,
   allRaces,
 }: DriverRowProps): React.ReactElement {
   const [expanded, setExpanded] = useState(false);
@@ -53,17 +53,17 @@ export function DriverRow({
     }
   };
 
-  const { rounds, qualifiedDrivers, champion } = playoffState;
+  const { rounds, qualifiedDrivers, champion } = knockoutState;
   const didQualify = qualifiedDrivers.includes(driver.driverId);
   const isChampion = champion === driver.driverId;
   const teamColors = getTeamColor(driver.constructorId);
 
   // Get elimination round for this driver (-1 = didn't qualify, 0 = finalist, 1-3 = eliminated in that round)
-  const elimRound = getEliminationRound(driver.driverId, playoffState);
+  const elimRound = getEliminationRound(driver.driverId, knockoutState);
 
   // Whether this driver is in the drop zone of the round in progress. Shown as a
   // text chip so the state is readable without colour and without expanding the row.
-  const atRisk = isDriverAtRisk(driver.driverId, playoffState);
+  const atRisk = isDriverAtRisk(driver.driverId, knockoutState);
 
   const round1 = rounds.find((r) => r.round === 1);
   const round2 = rounds.find((r) => r.round === 2);
@@ -71,10 +71,10 @@ export function DriverRow({
   const finalRound = rounds.find((r) => r.round === 4);
 
   // Get points for each round (includes all drivers for bracket tracking)
-  const r1Points = getPlayoffRoundPoints(round1, driver.driverId);
-  const r2Points = getPlayoffRoundPoints(round2, driver.driverId);
-  const r3Points = getPlayoffRoundPoints(round3, driver.driverId);
-  const finalPoints = getPlayoffRoundPoints(finalRound, driver.driverId);
+  const r1Points = getKnockoutRoundPoints(round1, driver.driverId);
+  const r2Points = getKnockoutRoundPoints(round2, driver.driverId);
+  const r3Points = getKnockoutRoundPoints(round3, driver.driverId);
+  const finalPoints = getKnockoutRoundPoints(finalRound, driver.driverId);
 
   // Check if driver advanced via tiebreaker in each round
   const r1Tiebreaker = advancedViaTiebreaker(round1, driver.driverId);
@@ -310,7 +310,7 @@ export function DriverRow({
             <DriverDetail
               driverId={driver.driverId}
               constructorId={driver.constructorId}
-              playoffState={playoffState}
+              knockoutState={knockoutState}
               allRaces={allRaces}
             />
           </Collapse>

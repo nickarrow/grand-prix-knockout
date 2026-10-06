@@ -1,4 +1,4 @@
-// Concise explainer banner for the playoff format
+// Concise explainer banner for the knockout format
 // Collapsible - when dismissed, shows a small "What is this?" link
 
 import { useState } from 'react';
@@ -7,15 +7,15 @@ import { Box, Typography, Button, IconButton, Link } from '@mui/material';
 import { Info, X, ChevronDown } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { PLAYOFF_QUALIFIERS, ELIMINATIONS_PER_ROUND, PLAYOFF_RACES } from 'src/constants';
+import { KNOCKOUT_QUALIFIERS, ELIMINATIONS_PER_ROUND, KNOCKOUT_RACES } from 'src/constants';
 
 const STORAGE_KEY = 'gpp-explainer-collapsed';
 
-interface PlayoffExplainerProps {
+interface KnockoutExplainerProps {
   compact?: boolean;
 }
 
-export function PlayoffExplainer({ compact = false }: PlayoffExplainerProps): React.ReactElement {
+export function KnockoutExplainer({ compact = false }: KnockoutExplainerProps): React.ReactElement {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(STORAGE_KEY) === 'true';
@@ -74,7 +74,7 @@ export function PlayoffExplainer({ compact = false }: PlayoffExplainerProps): Re
         <Info size={18} style={{ flexShrink: 0, marginTop: 2 }} />
         <Box sx={{ flex: 1, pr: 3 }}>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-            This is an alternative championship using real F1 results. Top {PLAYOFF_QUALIFIERS}{' '}
+            This is an alternative championship using real F1 results. Top {KNOCKOUT_QUALIFIERS}{' '}
             drivers advance to playoffs, {ELIMINATIONS_PER_ROUND} are eliminated each round, and the
             final race crowns the GPP Champion.{' '}
             <Button
@@ -116,8 +116,8 @@ export function PlayoffExplainer({ compact = false }: PlayoffExplainerProps): Re
             What is Grand Prix Playoffs?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
-            An alternative F1 championship format using real race results. The last {PLAYOFF_RACES}{' '}
-            races become playoffs: top {PLAYOFF_QUALIFIERS} drivers advance,{' '}
+            An alternative F1 championship format using real race results. The last {KNOCKOUT_RACES}{' '}
+            races become playoffs: top {KNOCKOUT_QUALIFIERS} drivers advance,{' '}
             {ELIMINATIONS_PER_ROUND} are eliminated each round, and the final race crowns the Grand
             Prix Playoffs Champion.
           </Typography>

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
-import type { PlayoffState, PlayoffRound, DriverStanding } from 'src/types';
+import type { KnockoutState, KnockoutRound, DriverStanding } from 'src/types';
 
 import {
   getEliminationRound,
   getBracketPoints,
-  getPlayoffRoundPoints,
+  getKnockoutRoundPoints,
   advancedViaTiebreaker,
 } from './index';
 
@@ -28,12 +28,12 @@ const createStanding = (driverId: string, points: number): DriverStanding => ({
   officialPoints: 0,
 });
 
-// Helper to create a mock playoff round
+// Helper to create a mock knockout round
 const createRound = (
   roundNum: number,
   standings: Array<{ id: string; points: number }>,
   eliminated: string[] = []
-): PlayoffRound => ({
+): KnockoutRound => ({
   round: roundNum,
   raceNumbers: [roundNum],
   standings: standings.map((s) => createStanding(s.id, s.points)),
@@ -45,11 +45,11 @@ const createRound = (
 
 describe('getEliminationRound', () => {
   it('should return -1 for non-qualifiers', () => {
-    const state: PlayoffState = {
+    const state: KnockoutState = {
       season: 2025,
       totalRaces: 24,
       regularSeasonRaces: 17,
-      playoffStartRace: 18,
+      knockoutStartRace: 18,
       regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2', 'd3'],
@@ -62,11 +62,11 @@ describe('getEliminationRound', () => {
   });
 
   it('should return 0 for finalists still competing', () => {
-    const state: PlayoffState = {
+    const state: KnockoutState = {
       season: 2025,
       totalRaces: 24,
       regularSeasonRaces: 17,
-      playoffStartRace: 18,
+      knockoutStartRace: 18,
       regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2', 'd3'],
@@ -79,11 +79,11 @@ describe('getEliminationRound', () => {
   });
 
   it('should return elimination round number', () => {
-    const state: PlayoffState = {
+    const state: KnockoutState = {
       season: 2025,
       totalRaces: 24,
       regularSeasonRaces: 17,
-      playoffStartRace: 18,
+      knockoutStartRace: 18,
       regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2', 'd3'],
@@ -106,14 +106,14 @@ describe('getEliminationRound', () => {
   });
 });
 
-describe('getPlayoffRoundPoints', () => {
+describe('getKnockoutRoundPoints', () => {
   it('should return null for undefined round', () => {
-    expect(getPlayoffRoundPoints(undefined, 'd1')).toBeNull();
+    expect(getKnockoutRoundPoints(undefined, 'd1')).toBeNull();
   });
 
   it('should return null for driver not in standings', () => {
     const round = createRound(1, [{ id: 'd1', points: 50 }], []);
-    expect(getPlayoffRoundPoints(round, 'd99')).toBeNull();
+    expect(getKnockoutRoundPoints(round, 'd99')).toBeNull();
   });
 
   it('should return points for driver in standings', () => {
@@ -125,18 +125,18 @@ describe('getPlayoffRoundPoints', () => {
       ],
       []
     );
-    expect(getPlayoffRoundPoints(round, 'd1')).toBe(50);
-    expect(getPlayoffRoundPoints(round, 'd2')).toBe(40);
+    expect(getKnockoutRoundPoints(round, 'd1')).toBe(50);
+    expect(getKnockoutRoundPoints(round, 'd2')).toBe(40);
   });
 });
 
 describe('getBracketPoints', () => {
   it('should return 0 when no rounds exist', () => {
-    const state: PlayoffState = {
+    const state: KnockoutState = {
       season: 2025,
       totalRaces: 24,
       regularSeasonRaces: 17,
-      playoffStartRace: 18,
+      knockoutStartRace: 18,
       regularSeasonComplete: false,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1'],
@@ -149,11 +149,11 @@ describe('getBracketPoints', () => {
   });
 
   it('should sum points from start round onward', () => {
-    const state: PlayoffState = {
+    const state: KnockoutState = {
       season: 2025,
       totalRaces: 24,
       regularSeasonRaces: 17,
-      playoffStartRace: 18,
+      knockoutStartRace: 18,
       regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1'],
@@ -175,11 +175,11 @@ describe('getBracketPoints', () => {
   });
 
   it('should handle driver not in some rounds', () => {
-    const state: PlayoffState = {
+    const state: KnockoutState = {
       season: 2025,
       totalRaces: 24,
       regularSeasonRaces: 17,
-      playoffStartRace: 18,
+      knockoutStartRace: 18,
       regularSeasonComplete: true,
       regularSeasonStandings: [],
       qualifiedDrivers: ['d1', 'd2'],

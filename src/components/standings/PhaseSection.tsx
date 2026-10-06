@@ -6,14 +6,14 @@ import { Box, Chip, Collapse, Paper, Typography } from '@mui/material';
 import { ChevronRight, Trophy } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
 
-import type { Race, PlayoffRound } from 'src/types';
+import type { Race, KnockoutRound } from 'src/types';
 import { TROPHY_ICON_SIZE, FINAL_ROUND_NUMBER } from 'src/constants';
 import { calculateTotalPoints } from 'src/engine';
 import { ELIMINATION_COLOR, PODIUM_COLORS } from 'src/theme/palette';
 
 import { RaceCard } from './RaceCard';
 
-type PhaseType = 'regular' | 'playoffs';
+type PhaseType = 'regular' | 'knockout';
 
 interface PhaseSectionProps {
   type: PhaseType;
@@ -26,7 +26,7 @@ interface PhaseSectionProps {
   eliminatedInRound?: number | null;
   eliminationRaceNumber?: number | null;
   finalistPosition?: number | null;
-  playoffRounds?: PlayoffRound[];
+  knockoutRounds?: KnockoutRound[];
 }
 
 const CHEVRON_ICON_SIZE = 16;
@@ -39,7 +39,7 @@ const BRONZE_POSITION = 3;
 
 function getPhaseLabel(type: PhaseType, didAdvance?: boolean): string {
   if (type === 'regular') return 'Regular Season';
-  if (type === 'playoffs') {
+  if (type === 'knockout') {
     if (didAdvance === false) return 'Playoffs (Did not advance)';
     return 'Playoffs';
   }
@@ -76,7 +76,7 @@ export function PhaseSection({
   eliminatedInRound = null,
   eliminationRaceNumber = null,
   finalistPosition = null,
-  playoffRounds = [],
+  knockoutRounds = [],
 }: PhaseSectionProps): React.ReactElement {
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
@@ -93,7 +93,7 @@ export function PhaseSection({
   };
 
   const phaseLabel = getPhaseLabel(type, didAdvance);
-  const isNonAdvancer = type === 'playoffs' && didAdvance === false;
+  const isNonAdvancer = type === 'knockout' && didAdvance === false;
   const wasEliminated = eliminatedInRound !== null;
   const isFinalist = finalistPosition !== null;
   const trophyColor = isFinalist ? getTrophyColor(finalistPosition, mode) : null;
@@ -112,9 +112,9 @@ export function PhaseSection({
 
   // Group races by playoff round for playoffs section
   const getRacesByRound = (): { roundNum: number; races: Race[]; points: number }[] => {
-    if (type !== 'playoffs' || playoffRounds.length === 0) return [];
+    if (type !== 'knockout' || knockoutRounds.length === 0) return [];
 
-    return playoffRounds
+    return knockoutRounds
       .map((round) => {
         const roundRaces = races.filter((race) => round.raceNumbers.includes(race.round));
         const roundPoints = calculateTotalPoints(driverId, roundRaces);
@@ -124,7 +124,7 @@ export function PhaseSection({
   };
 
   const racesByRound = getRacesByRound();
-  const showRoundByRound = type === 'playoffs' && racesByRound.length > 0;
+  const showRoundByRound = type === 'knockout' && racesByRound.length > 0;
 
   return (
     <Paper

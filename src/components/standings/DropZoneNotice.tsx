@@ -1,4 +1,4 @@
-// A line shown above the standings table while a playoff round is in progress.
+// A line shown above the standings table while a knockout round is in progress.
 // It names the round, how many of its races have run, and that the drivers in
 // the drop zone are knocked out if the round ends now. This carries the drop-zone state
 // in words so it does not depend on colour, and names the at-risk drivers in the
@@ -7,20 +7,20 @@
 import { Box, Typography } from '@mui/material';
 import { AlertTriangle } from 'lucide-react';
 
-import type { PlayoffState } from 'src/types';
+import type { KnockoutState } from 'src/types';
 import { getInProgressRound } from 'src/utils';
 import { DROP_ZONE_ICON_SIZE } from 'src/constants';
 
 interface DropZoneNoticeProps {
-  playoffState: PlayoffState;
+  knockoutState: KnockoutState;
   completedRaces: number;
 }
 
 export function DropZoneNotice({
-  playoffState,
+  knockoutState,
   completedRaces,
 }: DropZoneNoticeProps): React.ReactElement | null {
-  const round = getInProgressRound(playoffState);
+  const round = getInProgressRound(knockoutState);
   if (!round || round.atRisk.length === 0) {
     return null;
   }
@@ -28,7 +28,9 @@ export function DropZoneNotice({
   const totalRoundRaces = round.raceNumbers.length;
   const racesRun = round.raceNumbers.filter((raceNumber) => raceNumber <= completedRaces).length;
 
-  const atRiskNames = round.atRisk.map((driverId) => driverCode(driverId, playoffState)).join(', ');
+  const atRiskNames = round.atRisk
+    .map((driverId) => driverCode(driverId, knockoutState))
+    .join(', ');
 
   return (
     <Box
@@ -53,7 +55,7 @@ export function DropZoneNotice({
 }
 
 // Resolve a driver's three-letter code from the regular-season standings.
-function driverCode(driverId: string, playoffState: PlayoffState): string {
-  const standing = playoffState.regularSeasonStandings.find((s) => s.driver.driverId === driverId);
+function driverCode(driverId: string, knockoutState: KnockoutState): string {
+  const standing = knockoutState.regularSeasonStandings.find((s) => s.driver.driverId === driverId);
   return standing?.driver.code ?? driverId.toUpperCase();
 }

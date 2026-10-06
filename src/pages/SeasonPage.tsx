@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 
 import { useKnockoutData } from 'src/hooks';
 import { StandingsTable } from 'src/components/standings';
-import { PlayoffExplainer } from 'src/components/common';
+import { KnockoutExplainer } from 'src/components/common';
 import { hasStaticData } from 'src/services';
 import { TROPHY_ICON_SIZE_LARGE, FINAL_ROUND_NUMBER, getTeamColor } from 'src/constants';
 import { PODIUM_COLORS } from 'src/theme/palette';
@@ -63,7 +63,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
           <Typography variant="h4" component="h1" gutterBottom>
             {seasonYear} Grand Prix Playoffs
           </Typography>
-          <PlayoffExplainer compact />
+          <KnockoutExplainer compact />
           <Alert severity="info" sx={{ mt: 2 }}>
             The {seasonYear} season hasn't started yet. Check back once races begin!
           </Alert>
@@ -72,8 +72,8 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
     );
   }
 
-  // Name of the race that opens the playoffs (first playoff round number).
-  const playoffOpenerName = (): string => {
+  // Name of the race that opens the knockout (first knockout round number).
+  const knockoutOpenerName = (): string => {
     const opener = calendar.find((entry) => entry.round === knockoutState.knockoutStartRace);
     return opener?.raceName ?? `Race ${knockoutState.knockoutStartRace}`;
   };
@@ -97,7 +97,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
       // The last regular-season race has run, but no playoff race yet: say the
       // regular season is complete and name the race that opens the playoffs.
       if (racesLeft <= 0) {
-        return `Regular season complete • Playoffs open at ${playoffOpenerName()}`;
+        return `Regular season complete • Playoffs open at ${knockoutOpenerName()}`;
       }
       if (racesLeft === 1) {
         return `Race ${completedRaces} of ${totalRaces} • 1 regular-season race left`;
@@ -149,7 +149,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
           {knockoutState.season} Grand Prix Playoffs
         </Typography>
 
-        <PlayoffExplainer compact />
+        <KnockoutExplainer compact />
 
         <Box
           sx={{
@@ -192,7 +192,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
           )}
         </Box>
 
-        <StandingsTable playoffState={knockoutState} allRaces={races} />
+        <StandingsTable knockoutState={knockoutState} allRaces={races} />
       </Box>
     </Container>
   );

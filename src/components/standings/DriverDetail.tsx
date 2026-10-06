@@ -2,7 +2,7 @@
 
 import { Box } from '@mui/material';
 
-import type { Race, PlayoffState } from 'src/types';
+import type { Race, KnockoutState } from 'src/types';
 import { calculateTotalPoints } from 'src/engine';
 import { getTeamColor, FINAL_ROUND_NUMBER } from 'src/constants';
 
@@ -11,36 +11,36 @@ import { PhaseSection } from './PhaseSection';
 interface DriverDetailProps {
   driverId: string;
   constructorId: string;
-  playoffState: PlayoffState;
+  knockoutState: KnockoutState;
   allRaces: Race[];
 }
 
 export function DriverDetail({
   driverId,
   constructorId,
-  playoffState,
+  knockoutState,
   allRaces,
 }: DriverDetailProps): React.ReactElement {
-  const { regularSeasonRaces: regSeasonCount, playoffStartRace } = playoffState;
+  const { regularSeasonRaces: regSeasonCount, knockoutStartRace } = knockoutState;
   const teamColor = getTeamColor(constructorId).primary;
 
   // Regular season races and points
   const regularSeasonRaces = allRaces.filter((r) => r.round <= regSeasonCount);
   const regularSeasonPoints = calculateTotalPoints(driverId, regularSeasonRaces);
 
-  // All playoff races
-  const playoffRaces = allRaces.filter((r) => r.round >= playoffStartRace);
-  const playoffPoints = calculateTotalPoints(driverId, playoffRaces);
+  // All knockout races
+  const knockoutRaces = allRaces.filter((r) => r.round >= knockoutStartRace);
+  const knockoutPoints = calculateTotalPoints(driverId, knockoutRaces);
 
   // Determine elimination status and finalist position
-  const didAdvance = playoffState.qualifiedDrivers.includes(driverId);
+  const didAdvance = knockoutState.qualifiedDrivers.includes(driverId);
   let eliminatedInRound: number | null = null;
   let eliminationRaceNumber: number | null = null;
   let finalistPosition: number | null = null;
 
   if (didAdvance) {
     // Check which round (if any) this driver was eliminated in
-    for (const round of playoffState.rounds) {
+    for (const round of knockoutState.rounds) {
       if (round.eliminated.includes(driverId)) {
         eliminatedInRound = round.round;
         eliminationRaceNumber = Math.max(...round.raceNumbers);
@@ -52,9 +52,9 @@ export function DriverDetail({
     // Finalists are those who made it to the final (eliminated in final or champion)
     if (
       eliminatedInRound === FINAL_ROUND_NUMBER ||
-      (eliminatedInRound === null && playoffState.champion)
+      (eliminatedInRound === null && knockoutState.champion)
     ) {
-      const finalRound = playoffState.rounds.find((r) => r.round === FINAL_ROUND_NUMBER);
+      const finalRound = knockoutState.rounds.find((r) => r.round === FINAL_ROUND_NUMBER);
       if (finalRound) {
         // Get only the 4 finalists (those who were active in round 4)
         const finalistIds = [...finalRound.advancing, ...finalRound.eliminated];
@@ -87,18 +87,18 @@ export function DriverDetail({
       />
 
       {/* Playoffs - single consolidated section */}
-      {playoffRaces.length > 0 && (
+      {knockoutRaces.length > 0 && (
         <PhaseSection
-          type="playoffs"
-          races={playoffRaces}
+          type="knockout"
+          races={knockoutRaces}
           driverId={driverId}
-          points={playoffPoints}
+          points={knockoutPoints}
           accentColor={teamColor}
           didAdvance={didAdvance}
           eliminatedInRound={eliminatedInRound}
           eliminationRaceNumber={eliminationRaceNumber}
           finalistPosition={finalistPosition}
-          playoffRounds={playoffState.rounds}
+          knockoutRounds={knockoutState.rounds}
         />
       )}
     </Box>

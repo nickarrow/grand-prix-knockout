@@ -144,7 +144,7 @@ export function HomePage(): React.ReactElement {
           )}
 
           {!isLoading && !error && knockoutState && races.length > 0 && (
-            <StandingsTable playoffState={knockoutState} allRaces={races} />
+            <StandingsTable knockoutState={knockoutState} allRaces={races} />
           )}
         </Paper>
       </Box>

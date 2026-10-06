@@ -3,12 +3,12 @@ import { ExternalLink, Github } from 'lucide-react';
 
 import { TiebreakerExplainer } from 'src/components/common';
 import {
-  PLAYOFF_RACES,
-  PLAYOFF_QUALIFIERS,
+  KNOCKOUT_RACES,
+  KNOCKOUT_QUALIFIERS,
   RACE_POINTS,
   SPRINT_POINTS,
   RACES_PER_ROUND,
-  PLAYOFF_ROUNDS,
+  KNOCKOUT_ROUNDS,
   LAST_FASTEST_LAP_BONUS_SEASON,
 } from 'src/constants';
 
@@ -52,8 +52,8 @@ export function AboutPage(): React.ReactElement {
           The Format
         </Typography>
         <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.7 }}>
-          The last {PLAYOFF_RACES} races of the season become the playoffs. Everything before is the
-          regular season.
+          The last {KNOCKOUT_RACES} races of the season become the playoffs. Everything before is
+          the regular season.
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
@@ -70,7 +70,7 @@ export function AboutPage(): React.ReactElement {
               Regular Season
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Top {PLAYOFF_QUALIFIERS} advance to playoffs
+              Top {KNOCKOUT_QUALIFIERS} advance to playoffs
             </Typography>
           </Box>
           <Box
@@ -86,7 +86,7 @@ export function AboutPage(): React.ReactElement {
               Round 1 ({RACES_PER_ROUND} races)
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {PLAYOFF_ROUNDS[0].startDrivers} → {PLAYOFF_ROUNDS[0].endDrivers} drivers
+              {KNOCKOUT_ROUNDS[0].startDrivers} → {KNOCKOUT_ROUNDS[0].endDrivers} drivers
             </Typography>
           </Box>
           <Box
@@ -102,7 +102,7 @@ export function AboutPage(): React.ReactElement {
               Round 2 ({RACES_PER_ROUND} races)
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {PLAYOFF_ROUNDS[1].startDrivers} → {PLAYOFF_ROUNDS[1].endDrivers} drivers
+              {KNOCKOUT_ROUNDS[1].startDrivers} → {KNOCKOUT_ROUNDS[1].endDrivers} drivers
             </Typography>
           </Box>
           <Box
@@ -118,12 +118,12 @@ export function AboutPage(): React.ReactElement {
               Round 3 ({RACES_PER_ROUND} races)
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {PLAYOFF_ROUNDS[2].startDrivers} → {PLAYOFF_ROUNDS[2].endDrivers} drivers
+              {KNOCKOUT_ROUNDS[2].startDrivers} → {KNOCKOUT_ROUNDS[2].endDrivers} drivers
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
             <Typography variant="body2" fontWeight={600}>
-              Final ({PLAYOFF_ROUNDS[3].races} race)
+              Final ({KNOCKOUT_ROUNDS[3].races} race)
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Winner crowned GPP Champion
