@@ -1,6 +1,6 @@
 // A line shown above the standings table while a playoff round is in progress.
 // It names the round, how many of its races have run, and that the drivers in
-// the drop zone go out if the round ends now. This carries the drop-zone state
+// the drop zone are knocked out if the round ends now. This carries the drop-zone state
 // in words so it does not depend on colour, and names the at-risk drivers in the
 // accessibility tree without any row having to be expanded.
 
@@ -46,7 +46,7 @@ export function DropZoneNotice({
     >
       <AlertTriangle size={DROP_ZONE_ICON_SIZE} aria-hidden="true" style={{ flexShrink: 0 }} />
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-        {`Round ${round.round}: ${racesRun} of ${totalRoundRaces} races run. Drivers in the drop zone go out if the round ends now: ${atRiskNames}.`}
+        {`Round ${round.round}: ${racesRun} of ${totalRoundRaces} races run. Drivers in the drop zone are knocked out if the round ends now: ${atRiskNames}.`}
       </Typography>
     </Box>
   );
