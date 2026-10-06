@@ -30,7 +30,7 @@ import { describe, it, expect } from 'vitest';
 import { loadStaticSeasonData } from 'src/services/static-data';
 import type { SeasonStatus } from 'src/types';
 
-import { calculatePlayoffState } from './playoffs';
+import { calculateKnockoutState } from './knockout';
 
 interface GoldenRound {
   round: number;
@@ -359,7 +359,11 @@ const SEASON_2026: GoldenOutcome = {
 function outcomeFor(year: number): Promise<GoldenOutcome> {
   return loadStaticSeasonData(year).then((data) => {
     if (!data) throw new Error(`No bundled data for ${year}`);
-    const state = calculatePlayoffState(data.races, data.calendar, data.regularSeasonStandingOrder);
+    const state = calculateKnockoutState(
+      data.races,
+      data.calendar,
+      data.regularSeasonStandingOrder
+    );
     return {
       qualifiedDrivers: state.qualifiedDrivers,
       champion: state.champion,

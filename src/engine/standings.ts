@@ -99,7 +99,7 @@ function calculateOfficialPoints(driverId: string, races: Race[]): number {
 //      when two drivers are genuinely equal under the full rule.
 //
 // regularSeasonOrder carries both the regular-season position and the terminal
-// official-order key: for a playoff round it is the driverId -> official-order
+// official-order key: for a knockout round it is the driverId -> official-order
 // index map, which is itself the published regular-season finishing order, so one
 // map answers both keys 3 and 4. It is passed for every season.
 export function compareTiebreaker(

@@ -1,4 +1,4 @@
-// Playoff calculation engine exports
+// Knockout calculation engine exports
 
 // Points calculation
 export {
@@ -11,10 +11,10 @@ export {
 // Standings calculation
 export { extractDrivers, calculateStandings, compareTiebreaker } from './standings';
 
-// Playoff logic
+// Knockout logic
 export {
   determineSeasonStatus,
   getRegularSeasonRaces,
-  getPlayoffRoundRaces,
-  calculatePlayoffState,
-} from './playoffs';
+  getKnockoutRoundRaces,
+  calculateKnockoutState,
+} from './knockout';

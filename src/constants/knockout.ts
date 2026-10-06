@@ -1,10 +1,10 @@
-// Playoff System Constants
+// Knockout System Constants
 
-// Number of races in the playoff portion of the season
-export const PLAYOFF_RACES = 7;
+// Number of races in the knockout portion of the season
+export const KNOCKOUT_RACES = 7;
 
-// Number of drivers who qualify for playoffs
-export const PLAYOFF_QUALIFIERS = 10;
+// Number of drivers who qualify for the knockout
+export const KNOCKOUT_QUALIFIERS = 10;
 
 // Number of drivers eliminated per round
 export const ELIMINATIONS_PER_ROUND = 2;
@@ -26,8 +26,8 @@ export const F1_COLUMN_WIDTH = 40;
 // ranked by this round's points (decision 0005).
 export const LAST_ELIMINATION_ROUND_NUMBER = 3;
 
-// Playoff round configuration
-export const PLAYOFF_ROUNDS = [
+// Knockout round configuration
+export const KNOCKOUT_ROUNDS = [
   { round: 1, startDrivers: 10, endDrivers: 8, races: 2 },
   { round: 2, startDrivers: 8, endDrivers: 6, races: 2 },
   { round: 3, startDrivers: 6, endDrivers: 4, races: 2 },

@@ -1,13 +1,13 @@
-// Mapping playoff races to rounds, including the decision 0005 calendar-change
+// Mapping knockout races to rounds, including the decision 0005 calendar-change
 // rules (a cancelled race, a round that lost both its races, an added race). The
 // engine composes these functions rather than special-casing a season: a normal
 // 7-race calendar is grouped exactly as the original round arithmetic grouped it,
 // so no 2020-2026 outcome moves.
 
-import { PLAYOFF_RACES, PLAYOFF_ROUNDS } from 'src/constants';
+import { KNOCKOUT_RACES, KNOCKOUT_ROUNDS } from 'src/constants';
 import type { Race, RaceCalendar } from 'src/types';
 
-// A playoff round's date window, half-open: start inclusive, end exclusive. A
+// A knockout round's date window, half-open: start inclusive, end exclusive. A
 // null bound is open on that side, so the final round (end null) owns every date
 // from its start onward. The added-race rule places a race by this window.
 export interface RoundDateRange {
@@ -16,25 +16,25 @@ export interface RoundDateRange {
   end: number | null; // ms since epoch, exclusive
 }
 
-// The round number of the first playoff race (the race after the regular season).
-export function playoffStartRaceNumber(totalRaces: number): number {
-  return totalRaces - PLAYOFF_RACES + 1;
+// The round number of the first knockout race (the race after the regular season).
+export function knockoutStartRaceNumber(totalRaces: number): number {
+  return totalRaces - KNOCKOUT_RACES + 1;
 }
 
-// The first race round number of a playoff round, by the locked 2-2-2-1
-// structure. playoffStartRace is the round number of the first playoff race.
-export function playoffRoundStartRace(playoffStartRace: number, playoffRound: number): number {
+// The first race round number of a knockout round, by the locked 2-2-2-1
+// structure. knockoutStartRace is the round number of the first knockout race.
+export function knockoutRoundStartRace(knockoutStartRace: number, knockoutRound: number): number {
   let raceOffset = 0;
-  for (let i = 0; i < playoffRound - 1; i++) {
-    raceOffset += PLAYOFF_ROUNDS[i]?.races ?? 0;
+  for (let i = 0; i < knockoutRound - 1; i++) {
+    raceOffset += KNOCKOUT_ROUNDS[i]?.races ?? 0;
   }
-  return playoffStartRace + raceOffset;
+  return knockoutStartRace + raceOffset;
 }
 
 // A round's scheduled slot count from the locked structure (2 for rounds 1-3,
 // 1 for the final).
-export function scheduledSlots(playoffRound: number): number {
-  return PLAYOFF_ROUNDS[playoffRound - 1]?.races ?? 0;
+export function scheduledSlots(knockoutRound: number): number {
+  return KNOCKOUT_ROUNDS[knockoutRound - 1]?.races ?? 0;
 }
 
 // Parse an ISO date string to ms since epoch; an unparseable date is null so the
@@ -44,7 +44,7 @@ function toTime(date: string): number | null {
   return Number.isNaN(time) ? null : time;
 }
 
-// Build each playoff round's date range from the locked calendar entries, so an
+// Build each knockout round's date range from the locked calendar entries, so an
 // added race can be assigned to the round whose range contains its date. The
 // range of a round runs from the date of its first locked race (inclusive) to the
 // date of the next round's first locked race (exclusive); the final round is
@@ -52,12 +52,12 @@ function toTime(date: string): number | null {
 // which the assignment treats as open on that side.
 export function buildRoundDateRanges(
   calendar: RaceCalendar[],
-  playoffStartRace: number
+  knockoutStartRace: number
 ): RoundDateRange[] {
   const calendarByRound = new Map(calendar.map((entry) => [entry.round, entry.date]));
 
-  const starts = PLAYOFF_ROUNDS.map((config) => {
-    const startRace = playoffRoundStartRace(playoffStartRace, config.round);
+  const starts = KNOCKOUT_ROUNDS.map((config) => {
+    const startRace = knockoutRoundStartRace(knockoutStartRace, config.round);
     const date = calendarByRound.get(startRace);
     return { round: config.round, start: date !== undefined ? toTime(date) : null };
   });
@@ -69,7 +69,7 @@ export function buildRoundDateRanges(
   }));
 }
 
-// Which playoff round a completed race belongs to.
+// Which knockout round a completed race belongs to.
 //
 // The backbone is the locked 2-2-2-1 structure keyed on the race's round number,
 // identical to the original mapping, so a normal calendar is grouped exactly as
@@ -79,23 +79,23 @@ export function buildRoundDateRanges(
 // every round's range) is an added race (decision 0005). It joins the round whose
 // DATE RANGE contains its date, because Jolpica renumbers rounds and the added
 // Grand Prix cannot be placed on round number alone.
-export function playoffRoundForRace(
+export function knockoutRoundForRace(
   race: Race,
-  playoffStartRace: number,
+  knockoutStartRace: number,
   roundDateRanges: RoundDateRange[]
 ): number | null {
   // Backbone: round number falls inside a locked round's range.
-  for (let roundNum = 1; roundNum <= PLAYOFF_ROUNDS.length; roundNum++) {
-    const config = PLAYOFF_ROUNDS[roundNum - 1];
+  for (let roundNum = 1; roundNum <= KNOCKOUT_ROUNDS.length; roundNum++) {
+    const config = KNOCKOUT_ROUNDS[roundNum - 1];
     if (!config) continue;
-    const startRace = playoffRoundStartRace(playoffStartRace, roundNum);
+    const startRace = knockoutRoundStartRace(knockoutStartRace, roundNum);
     const endRace = startRace + config.races - 1;
     if (race.round >= startRace && race.round <= endRace) {
       return roundNum;
     }
   }
 
-  // Added race: place it by date. A race before the first playoff race is still
+  // Added race: place it by date. A race before the first knockout race is still
   // regular season and is not placed here.
   const time = toTime(race.date);
   if (time === null) {

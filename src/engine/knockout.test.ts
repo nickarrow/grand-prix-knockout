@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
-import { PLAYOFF_QUALIFIERS, ELIMINATIONS_PER_ROUND } from 'src/constants';
+import { KNOCKOUT_QUALIFIERS, ELIMINATIONS_PER_ROUND } from 'src/constants';
 import type { Race, RaceCalendar } from 'src/types';
 
 import {
   determineSeasonStatus,
   getRegularSeasonRaces,
-  getPlayoffRoundRaces,
-  calculatePlayoffState,
-} from './playoffs';
+  getKnockoutRoundRaces,
+  calculateKnockoutState,
+} from './knockout';
 
 // Helper to create mock calendar
 const createCalendar = (totalRaces: number): RaceCalendar[] =>
@@ -66,9 +66,9 @@ describe('determineSeasonStatus', () => {
     expect(status).toBe('regular-season');
   });
 
-  it('should return playoffs when in playoff races', () => {
+  it('should return playoffs when in knockout races', () => {
     const calendar = createCalendar(24);
-    // Playoffs start at race 18 (24 - 7 + 1)
+    // The knockout starts at race 18 (24 - 7 + 1)
     const status = determineSeasonStatus(calendar, 18, new Date('2025-10-01'));
     expect(status).toBe('playoffs');
   });
@@ -95,13 +95,13 @@ describe('getRegularSeasonRaces', () => {
   });
 });
 
-describe('getPlayoffRoundRaces', () => {
-  it('should return correct races for playoff round 1', () => {
+describe('getKnockoutRoundRaces', () => {
+  it('should return correct races for knockout round 1', () => {
     const races = Array.from({ length: 24 }, (_, i) =>
       createRace(i + 1, [{ id: 'a', position: 1 }])
     );
 
-    const round1Races = getPlayoffRoundRaces(races, 24, 1);
+    const round1Races = getKnockoutRoundRaces(races, 24, 1);
 
     // Round 1 = races 18-19 for 24-race season
     expect(round1Races).toHaveLength(2);
@@ -109,12 +109,12 @@ describe('getPlayoffRoundRaces', () => {
     expect(round1Races[1]?.round).toBe(19);
   });
 
-  it('should return correct races for playoff round 2', () => {
+  it('should return correct races for knockout round 2', () => {
     const races = Array.from({ length: 24 }, (_, i) =>
       createRace(i + 1, [{ id: 'a', position: 1 }])
     );
 
-    const round2Races = getPlayoffRoundRaces(races, 24, 2);
+    const round2Races = getKnockoutRoundRaces(races, 24, 2);
 
     // Round 2 = races 20-21
     expect(round2Races).toHaveLength(2);
@@ -127,7 +127,7 @@ describe('getPlayoffRoundRaces', () => {
       createRace(i + 1, [{ id: 'a', position: 1 }])
     );
 
-    const finalRaces = getPlayoffRoundRaces(races, 24, 4);
+    const finalRaces = getKnockoutRoundRaces(races, 24, 4);
 
     // Final = race 24 only
     expect(finalRaces).toHaveLength(1);
@@ -135,7 +135,7 @@ describe('getPlayoffRoundRaces', () => {
   });
 });
 
-describe('calculatePlayoffState', () => {
+describe('calculateKnockoutState', () => {
   // Create 12 drivers for testing
   const driverIds = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10', 'd11', 'd12'];
 
@@ -152,9 +152,9 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(17); // Just regular season
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
-    expect(state.qualifiedDrivers).toHaveLength(PLAYOFF_QUALIFIERS);
+    expect(state.qualifiedDrivers).toHaveLength(KNOCKOUT_QUALIFIERS);
     // d1-d10 should qualify (top 10 by points)
     expect(state.qualifiedDrivers).toContain('d1');
     expect(state.qualifiedDrivers).toContain('d10');
@@ -166,7 +166,7 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(19); // Through round 1
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     expect(state.rounds).toHaveLength(1);
     expect(state.rounds[0]?.eliminated).toHaveLength(ELIMINATIONS_PER_ROUND);
@@ -177,18 +177,18 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(24); // Complete season
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     expect(state.champion).toBe('d1'); // d1 wins every race
     expect(state.status).toBe('completed');
     expect(state.rounds).toHaveLength(4);
   });
 
-  it('should reset points each playoff round', () => {
+  it('should reset points each knockout round', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(21); // Through round 2
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     // Round 2 standings should only reflect races 20-21, not cumulative
     const round2 = state.rounds[1];
@@ -204,7 +204,7 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(21); // Through round 2
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     // Round 2 should include all 12 drivers (all who raced), not just the 8 still competing
     const round2 = state.rounds[1];
@@ -221,7 +221,7 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(19); // Through round 1
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     // Round 1 should include all 12 drivers (10 qualified + 2 non-qualifiers)
     const round1 = state.rounds[0];
@@ -238,7 +238,7 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(18); // Regular season (1-17) plus race 18, first of Round 1
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     const round1 = state.rounds[0];
     expect(round1).toBeDefined();
@@ -256,7 +256,7 @@ describe('calculatePlayoffState', () => {
     const calendar = createCalendar(24);
     const races = createFullSeason(19); // Through round 1 (races 18-19)
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     const round1 = state.rounds[0];
     expect(round1?.isComplete).toBe(true);
@@ -321,7 +321,7 @@ describe('calculatePlayoffState', () => {
       'd12',
     ];
 
-    const state = calculatePlayoffState(races, calendar, officialOrder);
+    const state = calculateKnockoutState(races, calendar, officialOrder);
 
     const round1 = state.rounds[0];
     expect(round1?.isComplete).toBe(true);
@@ -359,7 +359,7 @@ describe('calculatePlayoffState', () => {
     // ranks d1 first.
     const officialOrder = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'];
 
-    const state = calculatePlayoffState(regularSeasonRaces, calendar, officialOrder);
+    const state = calculateKnockoutState(regularSeasonRaces, calendar, officialOrder);
 
     const [first, second] = state.regularSeasonStandings;
     expect(first?.points).toBe(second?.points); // genuinely level
@@ -371,12 +371,12 @@ describe('calculatePlayoffState', () => {
 // The decision 0005 calendar-change rules. These fire only on calendars that no
 // 2020-2026 season has, so they are proved on synthetic calendars. In each test
 // the locked calendar is the full 24-race schedule (so the regular season still
-// ends at round 17 and the playoff rounds are 18-19, 20-21, 22-23 and the final
+// ends at round 17 and the knockout rounds are 18-19, 20-21, 22-23 and the final
 // at 24); what varies is which races actually ran. A race that did not run is
 // either absent from the completed races (cancelled before it happened) or
 // present with no results (abandoned on the day), which is how a cancelled final
 // is told apart from a final still to come.
-describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
+describe('calculateKnockoutState calendar-change rules (decision 0005)', () => {
   const orderedResults = (order: string[]): Array<{ id: string; position: number | null }> =>
     order.map((id, index) => ({ id, position: index + 1 }));
 
@@ -412,7 +412,7 @@ describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
       createRace(22, orderedResults(['d1', 'd2', 'd3', 'd4', 'd5', 'd6'])),
     ];
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     const round2 = state.rounds.find((r) => r.round === 2);
     expect(round2).toBeDefined();
@@ -438,7 +438,7 @@ describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
       createRace(24, orderedResults(['d1', 'd2', 'd3', 'd4'])), // final
     ];
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     // Round 2 ran nothing, so it is not among the computed rounds.
     expect(state.rounds.find((r) => r.round === 2)).toBeUndefined();
@@ -484,7 +484,7 @@ describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
       createRace(24, []),
     ];
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     const round3 = state.rounds.find((r) => r.round === 3);
     expect(round3?.advancing).toHaveLength(4); // d1..d4 are the finalists
@@ -504,11 +504,11 @@ describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
 
   it('assigns an added race to the round whose date range contains its date', () => {
     // A Grand Prix is added inside Round 2's date window. It has no locked round
-    // number inside the playoff ranges (round 25, outside 20-21), so it is placed
+    // number inside the knockout ranges (round 25, outside 20-21), so it is placed
     // by date, and its date falls between Round 2's start and Round 3's start. The
     // added race lifts d7 above d6, so Round 2 eliminates d6 rather than d7 -
     // proof the race counted in Round 2 and not somewhere else.
-    const playoffDates: Record<number, string> = {
+    const knockoutDates: Record<number, string> = {
       18: '2025-10-05',
       19: '2025-10-12',
       20: '2025-10-26',
@@ -518,7 +518,7 @@ describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
       24: '2025-12-06',
     };
     const calendar: RaceCalendar[] = createCalendar(24).map((entry) => {
-      const date = playoffDates[entry.round];
+      const date = knockoutDates[entry.round];
       return date ? { ...entry, date } : entry;
     });
 
@@ -537,7 +537,7 @@ describe('calculatePlayoffState calendar-change rules (decision 0005)', () => {
       datedRace(22, '2025-11-16', ['d1', 'd2', 'd3', 'd4', 'd5', 'd7']),
     ];
 
-    const state = calculatePlayoffState(races, calendar);
+    const state = calculateKnockoutState(races, calendar);
 
     const round2 = state.rounds.find((r) => r.round === 2);
     expect(round2).toBeDefined();

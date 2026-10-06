@@ -1,9 +1,9 @@
-// Playoff calculation engine
+// Knockout calculation engine
 
 import {
-  PLAYOFF_RACES,
-  PLAYOFF_QUALIFIERS,
-  PLAYOFF_ROUNDS,
+  KNOCKOUT_RACES,
+  KNOCKOUT_QUALIFIERS,
+  KNOCKOUT_ROUNDS,
   FINAL_ROUND_NUMBER,
   LAST_ELIMINATION_ROUND_NUMBER,
 } from 'src/constants';
@@ -11,17 +11,17 @@ import type {
   Race,
   RaceCalendar,
   Driver,
-  PlayoffRound,
-  PlayoffState,
+  KnockoutRound,
+  KnockoutState,
   SeasonStatus,
 } from 'src/types';
 
 import {
-  playoffRoundStartRace,
+  knockoutRoundStartRace,
   scheduledSlots,
   buildRoundDateRanges,
-  playoffRoundForRace,
-} from './playoff-schedule';
+  knockoutRoundForRace,
+} from './knockout-schedule';
 import { extractDrivers, calculateStandings } from './standings';
 
 // Determine season status based on completed races and calendar
@@ -36,7 +36,7 @@ export function determineSeasonStatus(
 
   const totalRaces = calendar.length;
   const firstRaceDate = new Date(calendar[0]?.date ?? '');
-  const playoffStartRace = totalRaces - PLAYOFF_RACES + 1;
+  const knockoutStartRace = totalRaces - KNOCKOUT_RACES + 1;
 
   // If we have completed races, we're not in pre-season
   // (This handles stub data for testing future seasons)
@@ -46,8 +46,8 @@ export function determineSeasonStatus(
       return 'completed';
     }
 
-    // In playoffs (completed races >= playoff start race)
-    if (completedRaces >= playoffStartRace) {
+    // In the knockout (completed races >= knockout start race)
+    if (completedRaces >= knockoutStartRace) {
       return 'playoffs';
     }
 
@@ -64,35 +64,35 @@ export function determineSeasonStatus(
 
 // Get races for regular season
 export function getRegularSeasonRaces(races: Race[], totalRaces: number): Race[] {
-  const regularSeasonEnd = totalRaces - PLAYOFF_RACES;
+  const regularSeasonEnd = totalRaces - KNOCKOUT_RACES;
   return races.filter((race) => race.round <= regularSeasonEnd);
 }
 
-// Get races for a specific playoff round
-export function getPlayoffRoundRaces(
+// Get races for a specific knockout round
+export function getKnockoutRoundRaces(
   races: Race[],
   totalRaces: number,
-  playoffRound: number
+  knockoutRound: number
 ): Race[] {
-  const playoffStartRace = totalRaces - PLAYOFF_RACES + 1;
-  const roundConfig = PLAYOFF_ROUNDS[playoffRound - 1];
+  const knockoutStartRace = totalRaces - KNOCKOUT_RACES + 1;
+  const roundConfig = KNOCKOUT_ROUNDS[knockoutRound - 1];
   if (!roundConfig) return [];
 
-  const startRace = playoffRoundStartRace(playoffStartRace, playoffRound);
+  const startRace = knockoutRoundStartRace(knockoutStartRace, knockoutRound);
   const endRace = startRace + roundConfig.races - 1;
 
   return races.filter((race) => race.round >= startRace && race.round <= endRace);
 }
 
-// Calculate a single playoff round
-// allQualifiedDrivers: all drivers who qualified for playoffs (for bracket point tracking)
+// Calculate a single knockout round
+// allQualifiedDrivers: all drivers who qualified for the knockout (for bracket point tracking)
 // activeDrivers: drivers still competing in this round (for elimination decisions)
 // advancingCount: how many active drivers survive the round, the round config's
 //   endDrivers. When an earlier round lost both its races it eliminated nobody, so
 //   more drivers are active here and advancing only endDrivers sends the surplus
 //   out, which keeps the final at four (decision 0005).
-function calculatePlayoffRound(
-  playoffRound: number,
+function calculateKnockoutRound(
+  knockoutRound: number,
   activeDrivers: Driver[],
   allQualifiedDrivers: Driver[],
   roundRaces: Race[],
@@ -100,7 +100,7 @@ function calculatePlayoffRound(
   isComplete: boolean,
   advancingCount: number,
   regularSeasonOrder?: Map<string, number>
-): PlayoffRound {
+): KnockoutRound {
   // Calculate standings for ALL qualified drivers (for bracket point tracking)
   // This allows eliminated drivers to continue accumulating points for bracket ranking
   const allStandings = calculateStandings(
@@ -128,7 +128,7 @@ function calculatePlayoffRound(
   const atRisk = isComplete ? [] : wouldDrop;
 
   return {
-    round: playoffRound,
+    round: knockoutRound,
     raceNumbers: roundRaces.map((race) => race.round),
     standings: allStandings, // Include all qualified drivers for bracket tracking
     isComplete,
@@ -146,23 +146,23 @@ function buildOfficialOrderMap(order: string[]): Map<string, number> {
   return new Map(order.map((driverId, index) => [driverId, index]));
 }
 
-// Calculate complete playoff state for a season.
+// Calculate complete knockout state for a season.
 //
 // regularSeasonStandingOrder is the official F1 driver-standings order after the
 // last regular-season race, stored per season in data/<year>.json (decision 0004,
 // Option A). It is the terminal tiebreak key, applied to EVERY season: it orders
 // the regular-season standings themselves (so a tie like 2026 Norris and
-// Verstappen on 188 resolves), and through them every playoff ordering. When it is
+// Verstappen on 188 resolves), and through them every knockout ordering. When it is
 // absent (e.g. a live-API season with no stored order) the engine falls back to
 // the countback alone, leaving genuinely tied drivers in input order.
-export function calculatePlayoffState(
+export function calculateKnockoutState(
   races: Race[],
   calendar: RaceCalendar[],
   regularSeasonStandingOrder: string[] = []
-): PlayoffState {
+): KnockoutState {
   const totalRaces = calendar.length;
-  const regularSeasonEnd = totalRaces - PLAYOFF_RACES;
-  const playoffStartRace = regularSeasonEnd + 1;
+  const regularSeasonEnd = totalRaces - KNOCKOUT_RACES;
+  const knockoutStartRace = regularSeasonEnd + 1;
   const completedRaces = races.length;
 
   // Extract all drivers from the season
@@ -186,12 +186,12 @@ export function calculatePlayoffState(
   // Season being computed.
   const season = races[0]?.season ?? calendar[0]?.season ?? 0;
 
-  // The terminal key inside a playoff round is the regular-season finishing
+  // The terminal key inside a knockout round is the regular-season finishing
   // position, falling through to the official order (decision 0004 answer 4).
   // The regular-season standings above are already fully ordered by that chain
   // (countback over the regular-season races, then the official order), so their
   // positions are a dense rank that carries both keys at once. Pass that rank into
-  // every playoff round so bracket placings, finalist places 2-4, the drop zone
+  // every knockout round so bracket placings, finalist places 2-4, the drop zone
   // and the non-qualifiers all resolve deterministically.
   const regularSeasonOrder = new Map(
     regularSeasonStandings.map((s) => [s.driver.driverId, s.position])
@@ -199,7 +199,7 @@ export function calculatePlayoffState(
 
   // Determine qualified drivers (top 10 from regular season)
   const qualifiedDriverIds = regularSeasonStandings
-    .slice(0, PLAYOFF_QUALIFIERS)
+    .slice(0, KNOCKOUT_QUALIFIERS)
     .map((s) => s.driver.driverId);
 
   // All qualified drivers (for elimination decisions)
@@ -208,22 +208,22 @@ export function calculatePlayoffState(
   // Determine season status
   const status = determineSeasonStatus(calendar, completedRaces);
 
-  // Group playoff races that actually RAN into rounds. The backbone is the locked
+  // Group knockout races that actually RAN into rounds. The backbone is the locked
   // 2-2-2-1 structure by round number (so a normal calendar is unchanged), with
   // any added race placed by the date range of the round it falls inside
   // (decision 0005). A race present in the input but with no classified results is
   // a race that did not run (an abandoned or cancelled Grand Prix); it is excluded
   // here but still tells the engine the season reached that slot.
-  const roundDateRanges = buildRoundDateRanges(calendar, playoffStartRace);
+  const roundDateRanges = buildRoundDateRanges(calendar, knockoutStartRace);
   const racesByRound = new Map<number, Race[]>();
   // Whether the final's scheduled slot is present in the input but did not run,
   // which is how a cancelled final is told apart from a final still to come.
   let finalCancelled = false;
   for (const race of races) {
-    if (race.round < playoffStartRace) {
+    if (race.round < knockoutStartRace) {
       continue; // regular-season race
     }
-    const roundNum = playoffRoundForRace(race, playoffStartRace, roundDateRanges);
+    const roundNum = knockoutRoundForRace(race, knockoutStartRace, roundDateRanges);
     if (roundNum === null) {
       continue;
     }
@@ -239,12 +239,12 @@ export function calculatePlayoffState(
     racesByRound.set(roundNum, list);
   }
 
-  // Calculate playoff rounds
-  const rounds: PlayoffRound[] = [];
+  // Calculate knockout rounds
+  const rounds: KnockoutRound[] = [];
   let activeDrivers = [...allQualifiedDrivers]; // Drivers still competing for championship
   let champion: string | null = null;
 
-  // Whether any completed playoff race belongs to a round later than the given one.
+  // Whether any completed knockout race belongs to a round later than the given one.
   // The season having moved past a round is how the engine tells a cancelled race
   // (never run, never coming) from a race that simply has not happened yet
   // (decision 0005): a round whose successor has run is finished with whatever
@@ -252,13 +252,13 @@ export function calculatePlayoffState(
   const laterRoundHasRun = (afterRound: number): boolean =>
     races.some(
       (race) =>
-        race.round >= playoffStartRace &&
+        race.round >= knockoutStartRace &&
         race.results.length > 0 &&
-        (playoffRoundForRace(race, playoffStartRace, roundDateRanges) ?? 0) > afterRound
+        (knockoutRoundForRace(race, knockoutStartRace, roundDateRanges) ?? 0) > afterRound
     );
 
-  for (let roundNum = 1; roundNum <= PLAYOFF_ROUNDS.length; roundNum++) {
-    const roundConfig = PLAYOFF_ROUNDS[roundNum - 1];
+  for (let roundNum = 1; roundNum <= KNOCKOUT_ROUNDS.length; roundNum++) {
+    const roundConfig = KNOCKOUT_ROUNDS[roundNum - 1];
     if (!roundConfig) break;
 
     const roundRaces = racesByRound.get(roundNum) ?? [];
@@ -320,7 +320,7 @@ export function calculatePlayoffState(
       }
 
       // A final that ran decides the champion as before.
-      const round = calculatePlayoffRound(
+      const round = calculateKnockoutRound(
         roundNum,
         activeDrivers,
         allDrivers,
@@ -353,7 +353,7 @@ export function calculatePlayoffState(
     // surplus out this round and keeps the final at four (decision 0005).
     const advancingCount = roundConfig.endDrivers;
 
-    const round = calculatePlayoffRound(
+    const round = calculateKnockoutRound(
       roundNum,
       activeDrivers,
       allDrivers,
@@ -377,9 +377,9 @@ export function calculatePlayoffState(
     season,
     totalRaces,
     regularSeasonRaces: regularSeasonEnd,
-    playoffStartRace,
+    knockoutStartRace,
     // The regular season is complete once every regular-season race has run, even
-    // before the first playoff race. The qualifiers are then fixed (decision 0005).
+    // before the first knockout race. The qualifiers are then fixed (decision 0005).
     regularSeasonComplete: completedRaces >= regularSeasonEnd,
     regularSeasonStandings,
     qualifiedDrivers: qualifiedDriverIds,

@@ -74,9 +74,14 @@ export interface Season {
   regularSeasonStandingOrder: string[];
 }
 
-// Playoff-specific types
+// Knockout-specific types
 
-export type PlayoffStatus = 'qualified' | 'advancing' | 'eliminated' | 'champion' | 'not-qualified';
+export type KnockoutStatus =
+  | 'qualified'
+  | 'advancing'
+  | 'eliminated'
+  | 'champion'
+  | 'not-qualified';
 
 // Driver standing at any point in the season
 export interface DriverStanding {
@@ -89,10 +94,10 @@ export interface DriverStanding {
   officialPoints: number; // Official F1 season points for reference
 }
 
-// Playoff round result
-export interface PlayoffRound {
+// Knockout round result
+export interface KnockoutRound {
   round: number; // 1, 2, 3, or 4 (final)
-  raceNumbers: number[]; // Which race rounds are in this playoff round
+  raceNumbers: number[]; // Which race rounds are in this knockout round
   standings: DriverStanding[];
   isComplete: boolean; // true once every race the round covers has a result
   eliminated: string[]; // driverIds eliminated this round; empty until the round is complete
@@ -100,16 +105,16 @@ export interface PlayoffRound {
   atRisk: string[]; // active driverIds in the drop zone while the round is incomplete; empty once complete
 }
 
-// Complete playoff state for a season
-export interface PlayoffState {
+// Complete knockout state for a season
+export interface KnockoutState {
   season: number;
   totalRaces: number;
   regularSeasonRaces: number;
-  playoffStartRace: number;
+  knockoutStartRace: number;
   regularSeasonComplete: boolean; // every regular-season race has run (qualifiers are then fixed)
   regularSeasonStandings: DriverStanding[];
   qualifiedDrivers: string[]; // Top 10 driverIds
-  rounds: PlayoffRound[];
+  rounds: KnockoutRound[];
   champion: string | null; // driverId of champion
   status: SeasonStatus;
 }
