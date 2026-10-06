@@ -8,6 +8,60 @@ Changes before 2026.10.05 are in the git log.
 
 ## Unreleased
 
+Increment 3: cleanup. On the `increment-3-cleanup` branch, awaiting the owner's local review and merge. No playoff
+outcome changed and `src/engine/golden.test.ts` is byte-for-byte unchanged (7 of 7). The suite stays at 102 tests across
+7 files.
+
+### Added
+
+- Keyboard access to every interactive control, to WCAG 2.2 AA. The desktop Seasons trigger is a real `button` with
+  `aria-haspopup`, `aria-expanded` and a valid menu association; each driver row and phase-section header is Tab
+  reachable with `role="button"`, `tabIndex`, `aria-expanded` and Enter/Space toggling; and a `:focus-visible` outline
+  shows in both light and dark modes.
+- A not-found page and a catch-all route. Unknown paths and unsupported years render a friendly no-data page and send
+  zero requests to Jolpica, in place of the old "Failed to load NaN data" error and the live one-race-at-a-time fetch
+  for a year like `/2019`.
+- `WINNING_POSITION` and `F1_COLUMN_WIDTH` in `src/constants`, so the won-race highlight and the column width stop being
+  magic numbers.
+- `.github/workflows/deploy.yml` and `wrangler.toml`: deploy from a GitHub Action that runs lint, the tests and the
+  build before a Wrangler Pages direct upload, so a failing commit cannot reach production. The Cloudflare token and
+  account id are referenced only by GitHub-secret name. The gate takes effect once the owner completes the single action
+  in `docs/decisions/0007-deploy-gate.md` (turn off Cloudflare build-on-push, create a Pages-scoped token, store the
+  secrets).
+- `docs/decisions/0007-deploy-gate.md`, recording the deploy-gate choice (Option (a)) with Option (b) described.
+
+### Changed
+
+- The main entry chunk dropped from 619.73 kB (gzip 193.03 kB) to 195.53 kB (gzip 62.69 kB), a 68% reduction, by
+  route-based code splitting (React.lazy and Suspense per page) and vendor `manualChunks` (MUI and Emotion, React Router,
+  TanStack Query). Vite's 500 kB advisory is cleared without raising `chunkSizeWarningLimit`. The seven per-season data
+  chunks stay split and unchanged.
+- The driver-name column no longer wraps raggedly on desktop: it is widened to fit the longest real name on one line,
+  with ellipsis and the full name carried as a title for safety.
+- `getRacePoints` and `getSprintPoints` import `RACE_POINTS` and `SPRINT_POINTS` from `src/constants` rather than
+  re-declaring them; `countPodiums` uses `PODIUM_POSITIONS`; the won-race highlight uses `WINNING_POSITION`.
+- `docs/DEPLOYMENT.md` no longer claims per-pull-request preview URLs (there are no pull requests here), describes the
+  real deploy, weekly-data and branch-check flows, and marks the Cloudflare dashboard settings unverified.
+
+### Fixed
+
+- `hasSprintRace` in `src/services/static-data.ts` read `sprint !== null`, which was true for a future round whose sprint
+  is `undefined`. It now reads `Boolean(race && race.sprint)`, so absent, undefined and null all read false.
+- The data workflow closes its open `data-update-failure` issue on a successful run, with a comment, instead of leaving
+  it open. The existing `if: failure()` open/update logic is untouched. There is one such issue open from the 2026-10-06
+  failed dispatch; the next successful run will close it.
+
+### Removed
+
+- The declared-but-unloaded Inter font: `typography.fontFamily` now starts with a family the browser has, so the
+  declared font matches the one that renders. (If the owner wants the Inter look, self-host it via `@fontsource/inter`.)
+- Dead code: `useRaceResults` and `getRaceResults`, `queryKeys.races`, `extractDriversFromRaces`,
+  `extractDriversFromStaticData`, `DEFAULT_SEASON`, and the OpenF1 settings `OPENF1_API_BASE_URL` and the
+  `VITE_OPENF1_API_URL` env read (and its line in `.env.example`).
+- The unused `@mui/icons-material` dependency, with `package-lock.json` resynced.
+
+---
+
 Increment 2: the tiebreak rule you can defend. On the `increment-2-tiebreaks` branch, awaiting the owner's local review
 and merge.
 

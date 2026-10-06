@@ -3,7 +3,7 @@
 - [x] Increment 0: adopt the practice and write it down
 - [ ] Increment 1: ready for Singapore, merged before Monday 2026-10-12 06:00 UTC
 - [ ] Increment 2: rules you can defend, shipped before Monday 2026-10-26 06:00 UTC
-- [ ] Increment 3: cleanup
+- [x] Increment 3: cleanup
 - [ ] Increment 4: rename and relaunch, timed for the Final on 2026-12-06
 
 What is being built and why is in `docs/design.md`. Choices made along the way are in `docs/decisions/`.
@@ -463,6 +463,44 @@ not agreed separately).
   secret.
 - A decision on adding a `.gitattributes` that forces LF, so Windows checkouts stop failing `npm run format:check`.
   Spotted on 2026-10-05 and not part of the agreed list.
+
+### Done, 2026-10-06
+
+On the branch `increment-3-cleanup` in the main checkout, six commits: keyboard access and visible focus; the not-found
+route and year guard; the `@mui/icons-material` removal; the `hasSprintRace` fix; the constants, Inter-drop, name-wrap
+and dead-code cleanup; the vendor split and lazy routes; and this CI-and-docs commit.
+
+Observed. `npm test` reports 102 passed across 7 files, the golden suite 7 of 7, SHA256 unchanged from the increment-2
+baseline (`1E65F611...F46988`), so no playoff outcome moved. `npm run build` exits 0 with no 500 kB advisory: the main
+entry chunk fell from 619.73 kB (gzip 193.03 kB) to 195.53 kB (gzip 62.69 kB), a 68% reduction, with new `mui`, `router`
+and `query` chunks and the seven per-season data chunks (2020 to 2026, 104 to 153 kB) still split. `npm run lint` is
+clean and the Prettier check (`--end-of-line auto`) passes.
+
+A Playwright keyboard walk ran across the FEATs on the dev server. Tab reaches the Seasons button (named "Seasons"),
+Enter opens the menu with `aria-expanded` true, arrows move between items; on `/2024` Tab reaches each of 24 driver rows
+in order and Enter and Space each toggle the detail with no page scroll; the two phase headers toggle the same way; the
+focus ring renders `rgb(225,6,0)` in both themes. On the unsupported routes `/foo`, `/2019`, `/1999` and `/abc` the
+no-data page renders with zero Jolpica requests; `/2024` still renders the standings. The lazy routes smoke-load `/`,
+`/2024` and `/about` with no console errors. The desktop name column shows "Andrea Kimi Antonelli" on one line.
+
+CI and the deploy gate. The data workflow gained an `if: success()` step that closes the open `data-update-failure`
+issue with a comment, reusing the same label-then-title lookup the failure step uses; the `if: failure()` logic is
+untouched. `docs/decisions/0007-deploy-gate.md` recommends Option (a) and ships `.github/workflows/deploy.yml` (lint,
+tests, build, then Wrangler Pages direct upload) and `wrangler.toml` (`pages_build_output_dir = dist`, project name
+`grand-prix-playoffs`), both referencing the Cloudflare token and account id only by GitHub-secret name. A repo-wide
+grep for token-shaped literals found none.
+
+Deviated. README.md and CONTRIBUTING.md were left unchanged: FEAT-005's named examples (`@mui/icons-material`, OpenF1,
+the not-found behaviour) do not appear in either file, and the stale test count and pull-request language they still
+carry were made stale by earlier increments, outside this increment's "only where this increment makes them wrong"
+scope. The `.gitattributes` question in Needs from you was not acted on; it remains an owner decision.
+
+Still unverified. The Cloudflare dashboard settings (build command, output directory, Node version, branch settings),
+recorded in `docs/DEPLOYMENT.md` and now marked unverified. The single owner action that arms the deploy gate: turn off
+Cloudflare build-on-push, create a Pages-scoped API token, and store `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
+as repository secrets. The next Monday data run actually closing the open failure issue (the close step is verified by
+inspection only; GitHub workflows cannot run locally and no run was dispatched). The `/review` outcome for this
+increment, not yet run.
 
 ## Increment 4: rename and relaunch
 
