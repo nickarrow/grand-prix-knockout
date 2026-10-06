@@ -41,7 +41,7 @@ export function DropZoneNotice({
         p: 1.5,
         borderRadius: 1,
         bgcolor: 'warning.main',
-        color: 'secondary.contrastText',
+        color: 'warning.contrastText',
       }}
     >
       <AlertTriangle size={DROP_ZONE_ICON_SIZE} aria-hidden="true" style={{ flexShrink: 0 }} />

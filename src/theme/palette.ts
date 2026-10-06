@@ -77,6 +77,10 @@ export const palette = {
     main: '#FFB800', // At risk / bubble
     light: '#FFC933',
     dark: '#CC9300',
+    // Charcoal foreground for text on the warning fill. Measures 9.612:1 on
+    // #FFB800, clearing WCAG 2.2 AA (4.5:1). warning.main is the same in light
+    // and dark mode, so the ratio holds in both.
+    contrastText: '#1E1E1E',
   },
 
   // Background colors

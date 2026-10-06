@@ -214,7 +214,7 @@ export function DriverRow({
                   fontSize: '0.65rem',
                   fontWeight: 600,
                   bgcolor: 'warning.main',
-                  color: 'secondary.contrastText',
+                  color: 'warning.contrastText',
                   flexShrink: 0,
                   '& .MuiChip-label': { px: 0.75 },
                 }}
