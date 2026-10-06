@@ -37,8 +37,10 @@ const createRound = (
   round: roundNum,
   raceNumbers: [roundNum],
   standings: standings.map((s) => createStanding(s.id, s.points)),
+  isComplete: eliminated.length > 0,
   eliminated,
   advancing: standings.filter((s) => !eliminated.includes(s.id)).map((s) => s.id),
+  atRisk: [],
 });
 
 describe('getEliminationRound', () => {

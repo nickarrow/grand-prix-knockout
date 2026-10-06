@@ -89,8 +89,10 @@ export interface PlayoffRound {
   round: number; // 1, 2, 3, or 4 (final)
   raceNumbers: number[]; // Which race rounds are in this playoff round
   standings: DriverStanding[];
-  eliminated: string[]; // driverIds eliminated this round
-  advancing: string[]; // driverIds advancing to next round
+  isComplete: boolean; // true once every race the round covers has a result
+  eliminated: string[]; // driverIds eliminated this round; empty until the round is complete
+  advancing: string[]; // driverIds advancing to next round; empty until the round is complete
+  atRisk: string[]; // active driverIds in the drop zone while the round is incomplete; empty once complete
 }
 
 // Complete playoff state for a season

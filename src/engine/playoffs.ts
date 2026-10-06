@@ -88,7 +88,8 @@ function calculatePlayoffRound(
   allQualifiedDrivers: Driver[],
   roundRaces: Race[],
   totalRaces: number,
-  allSeasonRaces: Race[]
+  allSeasonRaces: Race[],
+  isComplete: boolean
 ): PlayoffRound {
   const roundConfig = PLAYOFF_ROUNDS[playoffRound - 1];
   if (!roundConfig) {
@@ -120,30 +121,28 @@ function calculatePlayoffRound(
   const activeDriverIds = new Set(activeDrivers.map((d) => d.driverId));
   const activeStandings = allStandings.filter((s) => activeDriverIds.has(s.driver.driverId));
 
-  // Determine eliminated and advancing drivers (based on active drivers only)
-  const eliminated: string[] = [];
-  const advancing: string[] = [];
+  // Split the active standings into the drivers who would advance and the drivers
+  // in the drop zone, using the same ordering for both. endDrivers is the number
+  // who survive the round (8, 6, 4, then 1 for the winner-take-all final).
+  const advancingCount = roundConfig.endDrivers;
 
-  if (playoffRound === PLAYOFF_ROUNDS.length) {
-    // Championship final - winner takes all
-    if (activeStandings[0]) {
-      advancing.push(activeStandings[0].driver.driverId);
-    }
-    activeStandings.slice(1).forEach((s) => eliminated.push(s.driver.driverId));
-  } else {
-    // Regular elimination round
-    const advancingCount = roundConfig.endDrivers;
+  const wouldAdvance = activeStandings.slice(0, advancingCount).map((s) => s.driver.driverId);
+  const wouldDrop = activeStandings.slice(advancingCount).map((s) => s.driver.driverId);
 
-    activeStandings.slice(0, advancingCount).forEach((s) => advancing.push(s.driver.driverId));
-    activeStandings.slice(advancingCount).forEach((s) => eliminated.push(s.driver.driverId));
-  }
+  // Only a complete round eliminates. While a round is in progress, nobody is
+  // eliminated and the drop zone is reported as at-risk (implements decision 0003).
+  const eliminated = isComplete ? wouldDrop : [];
+  const advancing = isComplete ? wouldAdvance : [];
+  const atRisk = isComplete ? [] : wouldDrop;
 
   return {
     round: playoffRound,
     raceNumbers,
     standings: allStandings, // Include all qualified drivers for bracket tracking
+    isComplete,
     eliminated,
     advancing,
+    atRisk,
   };
 }
 
@@ -202,7 +201,8 @@ export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): 
       allDrivers, // Pass ALL drivers for bracket point tracking (including non-qualifiers)
       roundRaces,
       totalRaces,
-      races
+      races,
+      isRoundComplete
     );
     rounds.push(round);
 

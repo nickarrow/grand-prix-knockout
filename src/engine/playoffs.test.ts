@@ -232,4 +232,37 @@ describe('calculatePlayoffState', () => {
     expect(d11Standing).toBeDefined();
     expect(d12Standing).toBeDefined();
   });
+
+  it('eliminates nobody and reports the drop zone when only one of a round’s two races has run', () => {
+    const calendar = createCalendar(24);
+    const races = createFullSeason(18); // Regular season (1-17) plus race 18, first of Round 1
+
+    const state = calculatePlayoffState(races, calendar);
+
+    const round1 = state.rounds[0];
+    expect(round1).toBeDefined();
+    // Round 1 covers races 18-19; only 18 has run, so it is not complete.
+    expect(round1?.isComplete).toBe(false);
+    expect(round1?.eliminated).toEqual([]);
+    expect(round1?.advancing).toEqual([]);
+    // The two lowest active drivers (d9, d10 finish 9th and 10th every race) are at risk.
+    expect(round1?.atRisk).toHaveLength(ELIMINATIONS_PER_ROUND);
+    expect(round1?.atRisk).toContain('d9');
+    expect(round1?.atRisk).toContain('d10');
+  });
+
+  it('fills eliminated and clears atRisk once every race in the round has run', () => {
+    const calendar = createCalendar(24);
+    const races = createFullSeason(19); // Through round 1 (races 18-19)
+
+    const state = calculatePlayoffState(races, calendar);
+
+    const round1 = state.rounds[0];
+    expect(round1?.isComplete).toBe(true);
+    expect(round1?.atRisk).toEqual([]);
+    expect(round1?.eliminated).toHaveLength(ELIMINATIONS_PER_ROUND);
+    expect(round1?.advancing).toHaveLength(8);
+    expect(round1?.eliminated).toContain('d9');
+    expect(round1?.eliminated).toContain('d10');
+  });
 });
