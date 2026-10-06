@@ -19,117 +19,18 @@
  */
 
 import { validateSeasonData, isSprintWeekend } from './validate-season-data.mjs';
-
-const JOLPICA_BASE_URL = 'https://api.jolpi.ca/ergast/f1';
-const USER_AGENT = 'grand-prix-playoffs-data/1.0 (+https://github.com/nickarrow/grand-prix-playoffs)';
-
-// Paging: Jolpica caps limit at 100 and pages with offset.
-const PAGE_LIMIT = 100;
-
-// Politeness delay between requests, well inside Jolpica's unauthenticated burst.
-const RATE_LIMIT_DELAY_MS = 300;
-
-// Retry policy for 429 and 5xx responses.
-const MAX_RETRIES = 5;
-const BASE_BACKOFF_MS = 1000;
-const MAX_BACKOFF_MS = 30000;
+import {
+  JOLPICA_BASE_URL,
+  PAGE_LIMIT,
+  RATE_LIMIT_DELAY_MS,
+  delay,
+  fetchJson,
+  fetchAllPages,
+  mergeByRound,
+} from './fetch-season-helpers.mjs';
 
 // Points positions, for the fastest-lap eligibility check mirrored from the app.
 const POINTS_POSITIONS = 10;
-
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Fetch JSON with retry/backoff. Retries on 429 and 5xx, honouring Retry-After
-// (seconds or an HTTP date) when present and falling back to exponential backoff
-// when it is absent. Throws on a 4xx other than 429 and after exhausting retries.
-async function fetchJson(url) {
-  for (let attempt = 0; ; attempt += 1) {
-    let response;
-    try {
-      response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
-    } catch (networkError) {
-      if (attempt >= MAX_RETRIES) {
-        throw new Error(`Network error after ${attempt} retries for ${url}: ${networkError.message}`);
-      }
-      await delay(backoffDelay(attempt));
-      continue;
-    }
-
-    if (response.ok) {
-      return response.json();
-    }
-
-    const retryable = response.status === 429 || (response.status >= 500 && response.status < 600);
-    if (!retryable || attempt >= MAX_RETRIES) {
-      throw new Error(`API error for ${url}: ${response.status} ${response.statusText}`);
-    }
-
-    const waitMs = retryAfterMs(response) ?? backoffDelay(attempt);
-    console.warn(`Retrying ${url} after ${waitMs}ms (status ${response.status}, attempt ${attempt + 1}).`);
-    await delay(waitMs);
-  }
-}
-
-// Exponential backoff with a ceiling.
-function backoffDelay(attempt) {
-  return Math.min(BASE_BACKOFF_MS * 2 ** attempt, MAX_BACKOFF_MS);
-}
-
-// Parse a Retry-After header: either a number of seconds or an HTTP date.
-// Returns milliseconds to wait, or null when the header is absent or unparseable.
-function retryAfterMs(response) {
-  const header = response.headers.get('retry-after');
-  if (!header) return null;
-  const asSeconds = Number(header);
-  if (!Number.isNaN(asSeconds)) {
-    return Math.max(0, asSeconds * 1000);
-  }
-  const asDate = Date.parse(header);
-  if (!Number.isNaN(asDate)) {
-    return Math.max(0, asDate - Date.now());
-  }
-  return null;
-}
-
-// Page through a season-level endpoint, collecting every race entry across pages.
-// pathSegment is 'results', 'sprint' or 'qualifying'. Returns the flat list of
-// RaceTable.Races objects from every page (one race may appear on two pages).
-async function fetchAllPages(year, pathSegment) {
-  const collected = [];
-  let offset = 0;
-  let total = Infinity;
-
-  while (offset < total) {
-    const url = `${JOLPICA_BASE_URL}/${year}/${pathSegment}.json?limit=${PAGE_LIMIT}&offset=${offset}`;
-    const data = await fetchJson(url);
-    total = Number(data.MRData.total);
-    const races = data.MRData.RaceTable.Races ?? [];
-    collected.push(...races);
-    offset += PAGE_LIMIT;
-    if (offset < total) {
-      await delay(RATE_LIMIT_DELAY_MS);
-    }
-  }
-
-  return collected;
-}
-
-// Merge paged race entries by round, concatenating the given result array on each.
-// resultKey is 'Results', 'SprintResults' or 'QualifyingResults'.
-function mergeByRound(pagedRaces, resultKey) {
-  const byRound = new Map();
-  for (const race of pagedRaces) {
-    const round = parseInt(race.round, 10);
-    const existing = byRound.get(round);
-    const rows = race[resultKey] ?? [];
-    if (existing) {
-      existing[resultKey] = (existing[resultKey] ?? []).concat(rows);
-    } else {
-      byRound.set(round, { ...race, [resultKey]: [...rows] });
-    }
-  }
-  return byRound;
-}
 
 async function fetchSeasonSchedule(year) {
   console.log(`Fetching ${year} schedule...`);
@@ -178,7 +79,10 @@ async function fetchSeasonData(year) {
 
   await delay(RATE_LIMIT_DELAY_MS);
   console.log('Fetching qualifying (paged)...');
-  const qualifyingByRound = mergeByRound(await fetchAllPages(year, 'qualifying'), 'QualifyingResults');
+  const qualifyingByRound = mergeByRound(
+    await fetchAllPages(year, 'qualifying'),
+    'QualifyingResults'
+  );
 
   await delay(RATE_LIMIT_DELAY_MS);
   console.log('Fetching sprints (paged)...');
