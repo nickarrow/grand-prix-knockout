@@ -322,18 +322,19 @@ const COMPLETED_SEASONS: Record<number, GoldenOutcome> = {
   },
 };
 
-// Season in progress. This block came from data/2026.json with 14 completed
-// races (the regular season not yet complete, no playoff round started). It is
-// updated ON PURPOSE in increment 1 task 7 when the data is refreshed to 16
-// races, and that is the only reason it may change. Engine edits must leave it
-// unchanged.
+// Season in progress. This block came from data/2026.json after the increment 1
+// task 7 refresh to 16 completed races: the regular season is now complete (16
+// of 16 regular-season races) but no playoff round has run, so the qualifiers
+// are fixed and rounds is still empty. The two extra races (15 and 16) moved
+// Leclerc ahead of Norris in the regular-season order; that is a data change,
+// not an engine change. This block changes only when the data changes.
 const SEASON_2026: GoldenOutcome = {
   qualifiedDrivers: [
     'antonelli',
     'russell',
     'hamilton',
-    'norris',
     'leclerc',
+    'norris',
     'max_verstappen',
     'piastri',
     'hadjar',
