@@ -160,7 +160,8 @@ export function AboutPage(): React.ReactElement {
           Bonus Points (2020–{LAST_FASTEST_LAP_BONUS_SEASON} seasons)
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Fastest Lap: 1 pt (if finished top 10). This bonus was removed from the {LAST_FASTEST_LAP_BONUS_SEASON + 1} season onwards.
+          Fastest Lap: 1 pt (if finished top 10). This bonus was removed from the{' '}
+          {LAST_FASTEST_LAP_BONUS_SEASON + 1} season onwards.
         </Typography>
 
         <Divider sx={{ my: 4 }} />

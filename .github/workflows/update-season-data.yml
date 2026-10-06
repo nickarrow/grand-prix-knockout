@@ -1,60 +1,123 @@
 name: Update Season Data
 
 on:
-  # Run every Monday at 6:00 AM UTC (after Sunday races)
+  # Run every Monday after the weekend's races, with a second run later the same
+  # day as an automatic retry if the first fails (owner approved).
   schedule:
     - cron: '0 6 * * 1'
-  # Allow manual trigger
+    - cron: '0 14 * * 1'
+  # Allow manual trigger, optionally for a specific year.
   workflow_dispatch:
     inputs:
       year:
         description: 'Season year to update (leave empty for current year)'
         required: false
 
+# Least-privilege: commit the data file and open a failure issue, nothing more.
+permissions:
+  contents: write
+  issues: write
+
+# Never let two data runs race each other (the 06:00 and 14:00 Monday runs, or a
+# manual dispatch alongside them).
+concurrency:
+  group: update-season-data
+  cancel-in-progress: false
+
 jobs:
   update-data:
-    runs-on: ubuntu-latest
-    
+    # Pin the runner image. ubuntu-latest migrates to Ubuntu 26 from 2026-10-19,
+    # mid Round 1; pinning keeps the toolchain stable through the playoffs.
+    runs-on: ubuntu-24.04
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
-      - name: Fetch season data
+      - name: Determine season year
+        id: year
         run: |
           YEAR="${{ github.event.inputs.year }}"
           if [ -z "$YEAR" ]; then
             YEAR=$(date +%Y)
           fi
-          echo "Fetching data for $YEAR season..."
-          node scripts/fetch-season-data.mjs $YEAR
+          echo "year=$YEAR" >> "$GITHUB_OUTPUT"
+          echo "Updating data for $YEAR season."
+
+      - name: Fetch and validate season data
+        run: node scripts/fetch-season-data.mjs ${{ steps.year.outputs.year }}
+
+      # Build the app against the freshly fetched data before committing anything,
+      # so a data change that would break the site never reaches main.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
 
       - name: Check for changes
         id: changes
         run: |
           if git diff --quiet data/; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes detected"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected."
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changes detected in data/"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected in data/."
           fi
 
       - name: Commit and push changes
         if: steps.changes.outputs.changed == 'true'
         run: |
-          YEAR="${{ github.event.inputs.year }}"
-          if [ -z "$YEAR" ]; then
-            YEAR=$(date +%Y)
-          fi
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add data/
-          git commit -m "chore(data): update $YEAR season data"
+          git commit -m "chore(data): update ${{ steps.year.outputs.year }} season data"
           git push
+
+      # On any failure above, open or update a tracking issue. Guarded by
+      # if: failure() so it cannot interfere with the fetch or the commit.
+      - name: Open or update failure issue
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = 'Season data update failed';
+            const body = [
+              'The scheduled season data update failed.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `Trigger: ${context.eventName}`,
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'data-update-failure',
+            });
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['data-update-failure'],
+              });
+            }
