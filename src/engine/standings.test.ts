@@ -90,6 +90,42 @@ describe('compareTiebreaker', () => {
     expect(compareTiebreaker(a, b)).toBeGreaterThan(0); // b should rank higher (more wins)
   });
 
+  it('orders two drivers level on points and top-ten finishes by regular-season position', () => {
+    // Two drivers identical on points and on every P1-P10 count. Without the
+    // regular-season key the comparator returns 0 and the order falls to sort
+    // stability. With the key, the driver who finished the regular season higher
+    // (lower position number) wins.
+    const a: DriverStanding = {
+      driver: createDriver('a'),
+      points: 40,
+      officialPoints: 0,
+      wins: 1,
+      podiums: 1,
+      position: 0,
+      positionHistory: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    };
+    const b: DriverStanding = {
+      driver: createDriver('b'),
+      points: 40,
+      officialPoints: 0,
+      wins: 1,
+      podiums: 1,
+      position: 0,
+      positionHistory: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    };
+
+    // No regular-season order supplied: tied, order preserved (returns 0).
+    expect(compareTiebreaker(a, b)).toBe(0);
+
+    // b finished the regular season 3rd, a finished 5th: b wins the tiebreak.
+    const regularSeasonOrder = new Map<string, number>([
+      ['a', 5],
+      ['b', 3],
+    ]);
+    expect(compareTiebreaker(a, b, regularSeasonOrder)).toBeGreaterThan(0);
+    expect(compareTiebreaker(b, a, regularSeasonOrder)).toBeLessThan(0);
+  });
+
   it('should use second places when wins are equal', () => {
     const a: DriverStanding = {
       driver: createDriver('a'),

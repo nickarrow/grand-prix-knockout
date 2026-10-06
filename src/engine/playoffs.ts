@@ -1,6 +1,11 @@
 // Playoff calculation engine
 
-import { PLAYOFF_RACES, PLAYOFF_QUALIFIERS, PLAYOFF_ROUNDS } from 'src/constants';
+import {
+  PLAYOFF_RACES,
+  PLAYOFF_QUALIFIERS,
+  PLAYOFF_ROUNDS,
+  INTERIM_TIEBREAK_SEASON,
+} from 'src/constants';
 import type {
   Race,
   RaceCalendar,
@@ -89,7 +94,8 @@ function calculatePlayoffRound(
   roundRaces: Race[],
   totalRaces: number,
   allSeasonRaces: Race[],
-  isComplete: boolean
+  isComplete: boolean,
+  regularSeasonOrder?: Map<string, number>
 ): PlayoffRound {
   const roundConfig = PLAYOFF_ROUNDS[playoffRound - 1];
   if (!roundConfig) {
@@ -114,7 +120,8 @@ function calculatePlayoffRound(
     allQualifiedDrivers,
     roundRaces,
     roundRaces,
-    allSeasonRaces
+    allSeasonRaces,
+    regularSeasonOrder
   );
 
   // Get standings for only active drivers (for elimination decisions)
@@ -165,6 +172,19 @@ export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): 
     races
   );
 
+  // Season being computed. Used to scope the interim regular-season tiebreak key.
+  const season = races[0]?.season ?? calendar[0]?.season ?? 0;
+
+  // For the season in progress only, build a driverId -> regular-season finishing
+  // position map and use it as the final tiebreak key inside playoff rounds, so a
+  // drop zone has a deterministic order rather than falling to sort stability
+  // (decision 0004, increment-1 scope). Completed seasons pass nothing and keep
+  // their published order unchanged.
+  const regularSeasonOrder =
+    season === INTERIM_TIEBREAK_SEASON
+      ? new Map(regularSeasonStandings.map((s) => [s.driver.driverId, s.position]))
+      : undefined;
+
   // Determine qualified drivers (top 10 from regular season)
   const qualifiedDriverIds = regularSeasonStandings
     .slice(0, PLAYOFF_QUALIFIERS)
@@ -202,7 +222,8 @@ export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): 
       roundRaces,
       totalRaces,
       races,
-      isRoundComplete
+      isRoundComplete,
+      regularSeasonOrder
     );
     rounds.push(round);
 
@@ -218,7 +239,7 @@ export function calculatePlayoffState(races: Race[], calendar: RaceCalendar[]): 
   }
 
   return {
-    season: races[0]?.season ?? calendar[0]?.season ?? 0,
+    season,
     totalRaces,
     regularSeasonRaces: regularSeasonEnd,
     playoffStartRace,

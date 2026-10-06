@@ -55,8 +55,17 @@ function calculateOfficialPoints(driverId: string, races: Race[]): number {
   return total;
 }
 
-// Compare two drivers for tiebreaker (returns negative if a wins, positive if b wins)
-export function compareTiebreaker(a: DriverStanding, b: DriverStanding): number {
+// Compare two drivers for tiebreaker (returns negative if a wins, positive if b wins).
+// regularSeasonOrder, when supplied, maps a driverId to its regular-season finishing
+// position and is used as the final key after the P1-P10 countback: the driver who
+// finished the regular season higher wins. It is passed only for the season in
+// progress (see INTERIM_TIEBREAK_SEASON); for every other season it is absent and
+// the comparator returns 0, leaving the order exactly as it was before.
+export function compareTiebreaker(
+  a: DriverStanding,
+  b: DriverStanding,
+  regularSeasonOrder?: Map<string, number>
+): number {
   // First compare by points
   if (a.points !== b.points) {
     return b.points - a.points;
@@ -68,6 +77,17 @@ export function compareTiebreaker(a: DriverStanding, b: DriverStanding): number 
     const bCount = b.positionHistory[i] ?? 0;
     if (aCount !== bCount) {
       return bCount - aCount;
+    }
+  }
+
+  // Final key for the season in progress: regular-season finishing position.
+  // Lower position (finished higher) wins. Only applied when both drivers are
+  // present in the supplied order.
+  if (regularSeasonOrder) {
+    const aPos = regularSeasonOrder.get(a.driver.driverId);
+    const bPos = regularSeasonOrder.get(b.driver.driverId);
+    if (aPos !== undefined && bPos !== undefined && aPos !== bPos) {
+      return aPos - bPos;
     }
   }
 
@@ -117,7 +137,8 @@ export function calculateStandings(
   drivers: Driver[],
   races: Race[],
   relevantRaces?: Race[], // Optional: only count points from these races
-  allSeasonRaces?: Race[] // Optional: all races for official F1 points calculation
+  allSeasonRaces?: Race[], // Optional: all races for official F1 points calculation
+  regularSeasonOrder?: Map<string, number> // Optional: final tiebreak key for the season in progress
 ): DriverStanding[] {
   const racesForPoints = relevantRaces ?? races;
   const racesForHistory = relevantRaces ?? races;
@@ -134,7 +155,7 @@ export function calculateStandings(
   }));
 
   // Sort by points, then tiebreaker
-  standings.sort(compareTiebreaker);
+  standings.sort((a, b) => compareTiebreaker(a, b, regularSeasonOrder));
 
   // Assign positions
   standings.forEach((standing, index) => {

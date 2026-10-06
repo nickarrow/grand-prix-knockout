@@ -18,6 +18,13 @@ export const RACES_PER_ROUND = 2;
 // Championship final round number
 export const FINAL_ROUND_NUMBER = 4;
 
+// Season in progress that uses regular-season position as the final tiebreak key
+// while the full tiebreak rule is still being settled. This scopes the interim
+// rule so completed seasons (2020-2025) keep their published order. See
+// docs/decisions/0004-tiebreak-countback-then-regular-season.md. Increment 2
+// settles the rule for every season and removes this scoping.
+export const INTERIM_TIEBREAK_SEASON = 2026;
+
 // Playoff round configuration
 export const PLAYOFF_ROUNDS = [
   { round: 1, startDrivers: 10, endDrivers: 8, races: 2 },
