@@ -15,20 +15,23 @@ playoff, the rounds, the drop zone, its own tiebreak order and the calendar lock
 
 ## The FIA documents
 
-Each PDF below was downloaded and its text extracted on 2026-10-05, and every article cited was read in that text. These
-are the issues that were found. A later issue in the same season could reword an article; nobody checked for one
-(unverified).
+Each PDF below was downloaded and its text extracted on 2026-10-05, and every article cited was read in that text.
 
-| Season | Document                                                                      | Issue                                |
-| ------ | ----------------------------------------------------------------------------- | ------------------------------------ |
-| 2020   | [2020 Formula 1 Sporting Regulations][fia2020]                                | Issue 12, 26 October 2020            |
-| 2021   | [2021 Formula 1 Sporting Regulations][fia2021]                                | Issue 12, published 11 November 2021 |
-| 2022   | [2022 Formula 1 Sporting Regulations][fia2022]                                | Issue 6, 29 April 2022               |
-| 2023   | [2023 Formula 1 Sporting Regulations][fia2023]                                | Issue 7, 25 October 2023             |
-| 2024   | [2024 Formula 1 Sporting Regulations][fia2024]                                | Issue 7, 31 July 2024                |
-| 2025   | [2025 Formula 1 Sporting Regulations][fia2025]                                | Issue 5, 30 April 2025               |
-| 2026   | [2026 FIA F1 Regulations, Section A, General Regulatory Provisions][fia2026a] | Issue 03, 25 June 2026               |
-| 2026   | [2026 FIA F1 Regulations, Section B, Sporting][fia2026b]                      | Issue 08, 5 August 2026              |
+Corrected on 2026-10-05: this table first cited earlier issues for 2020 to 2023 and Issue 08 of 2026 Section B. The
+source review found the later issues below. The articles this skill cites for those seasons were read again in them
+that day and say what the skill says. For 2024, 2025 and 2026 Section A a web search found no later issue; the FIA's
+own index timed out, so that is unverified.
+
+| Season | Document                                                                      | Issue                      |
+| ------ | ----------------------------------------------------------------------------- | -------------------------- |
+| 2020   | [2020 Formula 1 Sporting Regulations][fia2020]                                | Issue 14, 23 November 2020 |
+| 2021   | [2021 Formula 1 Sporting Regulations][fia2021]                                | Issue 13, 8 December 2021  |
+| 2022   | [2022 Formula 1 Sporting Regulations][fia2022]                                | Issue 9, 19 October 2022   |
+| 2023   | [2023 Formula 1 Sporting Regulations][fia2023]                                | Issue 8, 6 December 2023   |
+| 2024   | [2024 Formula 1 Sporting Regulations][fia2024]                                | Issue 7, 31 July 2024      |
+| 2025   | [2025 Formula 1 Sporting Regulations][fia2025]                                | Issue 5, 30 April 2025     |
+| 2026   | [2026 FIA F1 Regulations, Section A, General Regulatory Provisions][fia2026a] | Issue 03, 25 June 2026     |
+| 2026   | [2026 FIA F1 Regulations, Section B, Sporting][fia2026b]                      | Issue 09, 1 October 2026   |
 
 For 2026 the FIA split the rules into lettered sections. Points and the championship tiebreak moved to Section A, and
 classification stayed in Section B.
@@ -107,7 +110,9 @@ articles named.
 - 2021 to 2025, Art. 7.2. The same, but counting first places "in a race", second places "in a race", and so on. If that
   fails, the FIA nominates the winner.
 - 2026, Section A, A2.1.4c. The same race places in i to iii. Then iv: if that fails, the same criteria apply to the
-  drivers' qualifying results during the season.
+  drivers' qualifying results during the season. The article stops there. Where 2020 to 2025 let the FIA nominate the
+  winner, 2026 has no step for a tie that survives the qualifying count, so any key after it is this project's own
+  rule (verified in Issue 03).
 
 Three readings follow from the text.
 
@@ -140,20 +145,26 @@ The finishing status does not tell you which.
 
 ### How Jolpica encodes it
 
-- `position` is always a number: the order in the result list, classified or not. Verified: all 61 `R` and 7 `W` entries
-  in 2026 rounds 1 to 16 carry a numeric `position`.
+- `position` is always a whole number, sent as a string such as `"17"`: the order in the result list, classified or
+  not. Verified: all 61 `R` and 7 `W` entries in 2026 rounds 1 to 16 carry one. `positionText`, `points`, `grid` and
+  `laps` arrive as strings too (verified on 2026 round 16, 2026-10-05). `scripts/fetch-season-data.mjs` converts
+  `position` with `parseInt`, or sets it to `null` (below), and `points` with `parseFloat`, so the bundled files hold
+  numbers.
 - `positionText` is the position again when the car is classified, and a letter when it is not. Seen in 2026: `R` for
   not classified and `W` for did not start (verified, live data). Jolpica no longer uses `N` and uses `R` in its place
   ([Ergast differences][jdiff], verified). Ergast also used `D` for disqualified, `E` for excluded and `F` for failed to
   qualify; whether Jolpica still emits each of those is unverified.
-- `status` from 2025 is one of a short list: Finished, Lapped, Retired, Disqualified and Did not start, with Accident
-  defined and not yet used ([Ergast differences][jdiff] and [status docs][jstatus], verified). Every retirement and
-  accident reads "Retired". Before 2025 the long Ergast strings appear ("+1 Lap", "Engine", "Collision"), and Jolpica
+- From 2025 `status` takes only the values of an enumeration in Jolpica's code ([enumeration][jenum], linked from
+  [Ergast differences][jdiff]): finished, lapped, accident, retired, disqualified, did not start, did not qualify and
+  did not prequalify. Accident is not used yet, so every retirement and accident reads "Retired"
+  ([status docs][jstatus]). Verified. The race results in `data/2025.json` use five of the eight, Finished, Lapped,
+  Retired, Disqualified and Did not start, and `data/2026.json` uses four, without Disqualified (verified by scanning
+  the files on 2026-10-05). Before 2025 the long Ergast strings appear ("+1 Lap", "Engine", "Collision"), and Jolpica
   says it may remap older seasons. In the bundled files, 2020 to 2022 have the long strings, 2023 mostly the short set,
   and 2024 and 2025 only the short set (verified by scanning `data/`).
 - `points` is the race result's points as awarded, including the fastest-lap point where it applied: the [results
   docs][jresults] show Verstappen on 26 for the 2021 Austrian Grand Prix, and the counts above match. Half points arrive
-  as decimals such as 12.5. Verified.
+  as a decimal string such as `"12.5"`. Verified.
 - Sprint results use the same fields under `SprintResults`. Verified.
 
 The 2026 race results for rounds 1 to 16, from the season endpoint on 2026-10-05:
@@ -224,14 +235,14 @@ An id names an entry under one name, so a team that renames gets a new id: racin
 alpine for 2021, alphatauri to rb and alfa to sauber for 2024, sauber to audi for 2026. The swaps are visible season to
 season in the data; that each pair is the same team is general knowledge, not checked here.
 
-[fia2020]: https://www.fia.com/sites/default/files/2020_formula_1_sporting_regulations_-_iss_12_-_2020-10-26.pdf
-[fia2021]: https://www.fia.com/sites/default/files/formula_1_-_sporting_regulations_-_2021_-_iss_12_-_2021-11-11.pdf
-[fia2022]: https://www.fia.com/sites/default/files/formula_1_-_sporting_regulations_-_2022_-_iss_6_-_2022-04-29.pdf
-[fia2023]: https://www.fia.com/sites/default/files/fia_2023_formula_1_sporting_regulations_-_issue_7_-_2023-10-25.pdf
+[fia2020]: https://www.fia.com/sites/default/files/2020_formula_1_sporting_regulations_-_iss_14_-_2020-11-23.pdf
+[fia2021]: https://api.fia.com/sites/default/files/2021_formula_1_sporting_regulations_-_iss_13_-_2021-12-08.pdf
+[fia2022]: https://api.fia.com/sites/default/files/fia_2022_formula_1_sporting_regulations_-_issue_9_-_2022-10-19_0.pdf
+[fia2023]: https://www.fia.com/sites/default/files/fia_2023_formula_1_sporting_regulations_-_issue_8_-_2023-12-06_0.pdf
 [fia2024]: https://www.fia.com/sites/default/files/fia_2024_formula_1_sporting_regulations_-_issue_7_-_2024-07-31.pdf
 [fia2025]: https://fia.com/system/files/documents/fia_2025_formula_1_sporting_regulations_-_issue_5_-_2025-04-30.pdf
 [fia2026a]: https://api.fia.com/system/files/documents/fia_2026_f1_regulations_-_section_a_general_provisions_-_iss_03_-_2026-06-25.pdf
-[fia2026b]: https://www.fia.com/system/files/documents/fia_2026_f1_regulations_-_section_b_sporting_-_iss_08_-_2026-08-05_7.pdf
+[fia2026b]: https://api.fia.com/system/files/documents/fia_2026_f1_regulations_-_section_b_sporting_-_iss_09_-_2026-10-01.pdf
 [fl2025]: https://www.formula1.com/en/latest/article/fastest-lap-point-to-be-scrapped-in-2025-after-latest-fia-world-motor-sport.4pUjDzWnGRN7KVWENLc1BY
 [sprint2022]: https://www.espn.com/f1/story/_/id/33289147/f1-host-three-sprint-races-2022-revised-point-format
 [spa2021]: https://www.formula1.com/en/latest/article/verstappen-takes-victory-in-severely-shortened-rain-affected-belgian-gp-as.4AqGhiKQfFaqr7KZjyDjPZ
@@ -241,4 +252,5 @@ season in the data; that each pair is the same team is general knowledge, not ch
 [jrate]: https://github.com/jolpica/jolpica-f1/blob/main/docs/rate_limits.md
 [jdiff]: https://github.com/jolpica/jolpica-f1/blob/main/docs/ergast_differences.md
 [jstatus]: https://github.com/jolpica/jolpica-f1/blob/main/docs/endpoints/status.md
+[jenum]: https://github.com/jolpica/jolpica-f1/blob/71f12b1c9637aa838926abcb6f4840fbfac4d87c/jolpica/formula_one/models/session.py#L64-L71
 [jresults]: https://github.com/jolpica/jolpica-f1/blob/main/docs/endpoints/results.md
