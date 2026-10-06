@@ -265,4 +265,66 @@ describe('calculatePlayoffState', () => {
     expect(round1?.eliminated).toContain('d9');
     expect(round1?.eliminated).toContain('d10');
   });
+
+  it('breaks a 2026 round tie at the elimination boundary by regular-season position', () => {
+    // A 2026 season (so the interim regular-season tiebreak key is active) where
+    // two qualified drivers finish Round 1 level on points AND on the full P1-P10
+    // countback, sitting exactly on the advance/eliminate boundary. Without the
+    // key the order would fall to sort stability; with it the driver who finished
+    // the regular season higher advances and the other is eliminated.
+    const season = 2026;
+
+    // Regular-season order: d1..d7, then d9 ahead of d8, then d10. This makes d9's
+    // regular-season position (8) better than d8's (9), so d9 should win the tie.
+    const regularSeasonFinishOrder = [
+      'd1',
+      'd2',
+      'd3',
+      'd4',
+      'd5',
+      'd6',
+      'd7',
+      'd9',
+      'd8',
+      'd10',
+      'd11',
+      'd12',
+    ];
+
+    const seasonRace = (round: number, order: string[]): Race => ({
+      ...createRace(
+        round,
+        order.map((id, pos) => ({ id, position: pos + 1 }))
+      ),
+      season,
+    });
+
+    const calendar: RaceCalendar[] = createCalendar(24).map((c) => ({ ...c, season }));
+
+    // Regular season (rounds 1-17): the fixed finishing order above.
+    const regularSeasonRaces = Array.from({ length: 17 }, (_, i) =>
+      seasonRace(i + 1, regularSeasonFinishOrder)
+    );
+
+    // Round 1 (races 18-19): d8 and d9 swap 8th and 9th across the two races, so
+    // each ends with one P8 and one P9 — identical points and identical countback.
+    // d1-d7 finish above them, d10 below, so the tied pair lands at ranks 8 and 9.
+    const round1Order18 = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'];
+    const round1Order19 = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd9', 'd8', 'd10'];
+    const round1Races = [seasonRace(18, round1Order18), seasonRace(19, round1Order19)];
+
+    const races = [...regularSeasonRaces, ...round1Races];
+
+    const state = calculatePlayoffState(races, calendar);
+
+    expect(state.season).toBe(season);
+
+    const round1 = state.rounds[0];
+    expect(round1?.isComplete).toBe(true);
+    // d9 finished the regular season ahead of d8, so d9 advances and d8 is out.
+    expect(round1?.advancing).toContain('d9');
+    expect(round1?.eliminated).toContain('d8');
+    // d10 is the clear bottom and is eliminated regardless of the key.
+    expect(round1?.eliminated).toContain('d10');
+  });
 });
