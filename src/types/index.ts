@@ -14,7 +14,8 @@ export interface Driver {
 // Race result for a single driver
 export interface RaceResult {
   driverId: string;
-  position: number | null; // null if DNF/DNS
+  position: number | null; // null if not classified (DNF/DNS/not classified)
+  positionText: string; // Jolpica positionText: a number if classified, a letter (R/W/D/E/F/N) if not
   points: number;
   grid: number;
   status: string; // "Finished", "Retired", "+1 Lap", etc.
@@ -67,6 +68,10 @@ export interface Season {
   races: Race[];
   calendar: RaceCalendar[];
   drivers: Driver[];
+  // driverIds in the official F1 standings order after the last regular-season
+  // race, read from Jolpica's driver standings for that round. The terminal
+  // tiebreak key of decision 0004. Empty until the regular season is complete.
+  regularSeasonStandingOrder: string[];
 }
 
 // Playoff-specific types

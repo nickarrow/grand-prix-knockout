@@ -13,6 +13,7 @@ import {
   retryAfterMs,
   backoffDelay,
   fetchJson,
+  fetchDriverStandingsOrder,
 } from './fetch-season-helpers.mjs';
 
 // Build a Jolpica-shaped results page. limit is the server's echoed limit, which
@@ -139,6 +140,52 @@ describe('retryAfterMs', () => {
 
   it('returns null when the header is absent', () => {
     expect(retryAfterMs(headerResponse(null))).toBeNull();
+  });
+});
+
+describe('fetchDriverStandingsOrder', () => {
+  function standingsResponse(
+    standings: Array<{ position: string; driverId: string }>
+  ): Record<string, unknown> {
+    return {
+      MRData: {
+        StandingsTable: {
+          StandingsLists: [
+            {
+              DriverStandings: standings.map((s) => ({
+                position: s.position,
+                Driver: { driverId: s.driverId },
+              })),
+            },
+          ],
+        },
+      },
+    };
+  }
+
+  it('returns driverIds sorted by standings position', async () => {
+    // Deliberately out of order in the response so the sort is exercised, not
+    // the response order.
+    const fetchJsonFn = vi.fn().mockResolvedValue(
+      standingsResponse([
+        { position: '3', driverId: 'c' },
+        { position: '1', driverId: 'a' },
+        { position: '2', driverId: 'b' },
+      ])
+    );
+
+    const order = await fetchDriverStandingsOrder(2024, 17, fetchJsonFn);
+
+    expect(order).toEqual(['a', 'b', 'c']);
+    expect(fetchJsonFn.mock.calls[0][0]).toContain('/2024/17/driverstandings.json');
+  });
+
+  it('returns an empty order when there is no standings list yet', async () => {
+    const fetchJsonFn = vi
+      .fn()
+      .mockResolvedValue({ MRData: { StandingsTable: { StandingsLists: [] } } });
+
+    expect(await fetchDriverStandingsOrder(2026, 16, fetchJsonFn)).toEqual([]);
   });
 });
 

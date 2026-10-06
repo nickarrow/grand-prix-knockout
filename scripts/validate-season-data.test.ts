@@ -8,6 +8,8 @@ import {
   validateSeasonData,
   validateCalendarGuard,
   validateSprintWeekends,
+  validatePositionText,
+  validateRegularSeasonOrder,
   storedRegularSeasonComplete,
 } from './validate-season-data.mjs';
 
@@ -21,7 +23,11 @@ function race(round: number, overrides: Record<string, unknown> = {}): Record<st
     circuitName: `Circuit ${round}`,
     country: 'Test',
     date: `2026-03-${String(round).padStart(2, '0')}`,
-    results: Array.from({ length: 20 }, (_, i) => ({ driverId: `d${i}`, position: i + 1 })),
+    results: Array.from({ length: 20 }, (_, i) => ({
+      driverId: `d${i}`,
+      position: i + 1,
+      positionText: String(i + 1),
+    })),
     qualifying: [],
     sprint: null,
     ...overrides,
@@ -123,21 +129,96 @@ describe('validateCalendarGuard (decision 0005)', () => {
   });
 });
 
+describe('validatePositionText (decision 0004)', () => {
+  it('rejects a completed race result with no positionText', () => {
+    const bad = race(1, {
+      results: [{ driverId: 'd0', position: 1 }],
+    });
+    const errors = validatePositionText([bad]);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toMatch(/no positionText/i);
+  });
+
+  it('rejects a result whose positionText is an empty string', () => {
+    const bad = race(1, {
+      results: [{ driverId: 'd0', position: 1, positionText: '' }],
+    });
+    const errors = validatePositionText([bad]);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('passes results that carry a positionText, including a classified retiree letter', () => {
+    const good = race(1, {
+      results: [
+        { driverId: 'd0', position: 1, positionText: '1' },
+        { driverId: 'd1', position: null, positionText: 'R' },
+      ],
+    });
+    expect(validatePositionText([good])).toEqual([]);
+  });
+});
+
+describe('validateRegularSeasonOrder (decision 0004, Option A)', () => {
+  it('rejects a complete regular season with an empty stored order', () => {
+    const calendar = Array.from({ length: 23 }, (_, i) => calendarEntry(i + 1));
+    const races = Array.from({ length: 16 }, (_, i) => race(i + 1));
+    const errors = validateRegularSeasonOrder({
+      calendar,
+      races,
+      regularSeasonStandingOrder: [],
+    });
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toMatch(/regular-season standings order is missing or empty/i);
+  });
+
+  it('passes a complete regular season with a non-empty stored order', () => {
+    const calendar = Array.from({ length: 23 }, (_, i) => calendarEntry(i + 1));
+    const races = Array.from({ length: 16 }, (_, i) => race(i + 1));
+    const errors = validateRegularSeasonOrder({
+      calendar,
+      races,
+      regularSeasonStandingOrder: ['d0', 'd1', 'd2'],
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it('does not require the order before the regular season is complete', () => {
+    const calendar = Array.from({ length: 23 }, (_, i) => calendarEntry(i + 1));
+    const races = Array.from({ length: 10 }, (_, i) => race(i + 1));
+    const errors = validateRegularSeasonOrder({
+      calendar,
+      races,
+      regularSeasonStandingOrder: [],
+    });
+    expect(errors).toEqual([]);
+  });
+});
+
 describe('validateSeasonData integration', () => {
   it('passes a clean full fetch with no stored file', () => {
     const calendar = Array.from({ length: 23 }, (_, i) => calendarEntry(i + 1));
     const races = Array.from({ length: 16 }, (_, i) => race(i + 1));
-    const errors = validateSeasonData({ calendar, races, sprintRounds: [] }, null);
+    const order = Array.from({ length: 20 }, (_, i) => `d${i}`);
+    const errors = validateSeasonData(
+      { calendar, races, sprintRounds: [], regularSeasonStandingOrder: order },
+      null
+    );
     expect(errors).toEqual([]);
   });
 
   it('rejects a fetch with fewer races than the committed file', () => {
     const calendar = Array.from({ length: 23 }, (_, i) => calendarEntry(i + 1));
-    const stored = { calendar, races: Array.from({ length: 16 }, (_, i) => race(i + 1)) };
+    const order = Array.from({ length: 20 }, (_, i) => `d${i}`);
+    const stored = {
+      calendar,
+      races: Array.from({ length: 16 }, (_, i) => race(i + 1)),
+      regularSeasonStandingOrder: order,
+    };
     const fetched = {
       calendar,
       races: Array.from({ length: 14 }, (_, i) => race(i + 1)),
       sprintRounds: [],
+      regularSeasonStandingOrder: order,
     };
     const errors = validateSeasonData(fetched, stored);
     expect(errors.some((e: string) => /fewer than/i.test(e))).toBe(true);

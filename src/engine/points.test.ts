@@ -60,6 +60,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'verstappen',
           position: 1,
+          positionText: '1',
           points: 25,
           grid: 1,
           status: 'Finished',
@@ -79,6 +80,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'verstappen',
           position: 1,
+          positionText: '1',
           points: 26, // API includes the 1pt fastest lap bonus for 2024
           grid: 1,
           status: 'Finished',
@@ -98,6 +100,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'verstappen',
           position: 1,
+          positionText: '1',
           points: 25, // No fastest lap bonus in 2025+
           grid: 1,
           status: 'Finished',
@@ -116,6 +119,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'verstappen',
           position: 1,
+          positionText: '1',
           points: 25,
           grid: 1,
           status: 'Finished',
@@ -135,6 +139,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'verstappen',
           position: null,
+          positionText: 'R',
           points: 0,
           grid: 1,
           status: 'Retired',
@@ -153,6 +158,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'hamilton',
           position: 1,
+          positionText: '1',
           points: 25,
           grid: 1,
           status: 'Finished',
@@ -171,6 +177,7 @@ describe('calculateRaceWeekendPoints', () => {
         {
           driverId: 'verstappen',
           position: 1,
+          positionText: '1',
           points: 25,
           grid: 1,
           status: 'Finished',

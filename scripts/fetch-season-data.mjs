@@ -18,7 +18,7 @@
  * and exits non-zero.
  */
 
-import { validateSeasonData, isSprintWeekend } from './validate-season-data.mjs';
+import { validateSeasonData, isSprintWeekend, PLAYOFF_RACES } from './validate-season-data.mjs';
 import {
   JOLPICA_BASE_URL,
   PAGE_LIMIT,
@@ -27,10 +27,18 @@ import {
   fetchJson,
   fetchAllPages,
   mergeByRound,
+  fetchDriverStandingsOrder,
 } from './fetch-season-helpers.mjs';
 
 // Points positions, for the fastest-lap eligibility check mirrored from the app.
 const POINTS_POSITIONS = 10;
+
+// A numeric positionText means the car is classified at that finishing position;
+// a letter (R, W, D, E, F, N) means it is not classified. This is the rule of
+// decision 0004 for reading Jolpica's positionText.
+function isClassified(positionText) {
+  return /^\d+$/.test(positionText);
+}
 
 async function fetchSeasonSchedule(year) {
   console.log(`Fetching ${year} schedule...`);
@@ -39,7 +47,7 @@ async function fetchSeasonSchedule(year) {
 }
 
 function mapRaceResult(r) {
-  const classified = r.status === 'Finished' || r.status.includes('Lap');
+  const classified = isClassified(r.positionText);
   return {
     driverId: r.Driver.driverId,
     driverCode: r.Driver.code || r.Driver.driverId.substring(0, 3).toUpperCase(),
@@ -48,6 +56,7 @@ function mapRaceResult(r) {
     constructorId: r.Constructor.constructorId,
     constructorName: r.Constructor.name,
     position: classified ? parseInt(r.position, 10) : null,
+    positionText: r.positionText,
     points: parseFloat(r.points),
     grid: parseInt(r.grid, 10),
     status: r.status,
@@ -57,7 +66,7 @@ function mapRaceResult(r) {
 }
 
 function mapSprintResult(s) {
-  const classified = s.status === 'Finished' || s.status.includes('Lap');
+  const classified = isClassified(s.positionText);
   return {
     driverId: s.Driver.driverId,
     position: classified ? parseInt(s.position, 10) : null,
@@ -124,7 +133,20 @@ async function fetchSeasonData(year) {
     });
   }
 
-  return { calendar, races, sprintRounds };
+  // The official regular-season standings order (decision 0004, Option A). The
+  // last regular-season round is totalRounds - PLAYOFF_RACES. Only fetch it once
+  // that round has a race result; before then the order is not yet fixed and is
+  // left empty.
+  const totalRounds = calendar.length;
+  const lastRegularSeasonRound = totalRounds - PLAYOFF_RACES;
+  let regularSeasonStandingOrder = [];
+  if (lastRegularSeasonRound >= 1 && resultsByRound.has(lastRegularSeasonRound)) {
+    await delay(RATE_LIMIT_DELAY_MS);
+    console.log(`Fetching driver standings after round ${lastRegularSeasonRound}...`);
+    regularSeasonStandingOrder = await fetchDriverStandingsOrder(year, lastRegularSeasonRound);
+  }
+
+  return { calendar, races, sprintRounds, regularSeasonStandingOrder };
 }
 
 // Read the committed data file for a year, or null when it is absent.
@@ -170,7 +192,11 @@ async function main() {
     process.exit(1);
   }
 
-  const toWrite = { calendar: fetched.calendar, races: fetched.races };
+  const toWrite = {
+    calendar: fetched.calendar,
+    races: fetched.races,
+    regularSeasonStandingOrder: fetched.regularSeasonStandingOrder,
+  };
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -179,7 +205,10 @@ async function main() {
 
   console.log(`\nSaved ${toWrite.races.length} races to ${outputFile}`);
   console.log(`   Calendar: ${toWrite.calendar.length} races scheduled`);
-  console.log(`   Completed: ${toWrite.races.length} races\n`);
+  console.log(`   Completed: ${toWrite.races.length} races`);
+  console.log(
+    `   Regular-season order: ${toWrite.regularSeasonStandingOrder.length} drivers stored\n`
+  );
 }
 
 main();

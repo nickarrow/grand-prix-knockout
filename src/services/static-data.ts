@@ -12,6 +12,7 @@ interface StaticRaceResult {
   constructorId: string;
   constructorName: string;
   position: number | null;
+  positionText: string;
   points: number;
   grid: number;
   status: string;
@@ -45,6 +46,10 @@ interface StaticCalendarEntry {
 interface StaticSeasonData {
   calendar: StaticCalendarEntry[];
   races: StaticRace[];
+  // driverIds in official F1 standings order after the last regular-season race
+  // (decision 0004, Option A). Optional so a file written before this field
+  // existed still loads; absent reads as an empty order.
+  regularSeasonStandingOrder?: string[];
 }
 
 // Dynamic imports for static data files
@@ -94,9 +99,11 @@ export function hasStaticData(year: number): boolean {
 }
 
 // Load static season data
-export async function loadStaticSeasonData(
-  year: number
-): Promise<{ calendar: RaceCalendar[]; races: Race[] } | null> {
+export async function loadStaticSeasonData(year: number): Promise<{
+  calendar: RaceCalendar[];
+  races: Race[];
+  regularSeasonStandingOrder: string[];
+} | null> {
   const data = await loadStaticDataModule(year);
   if (!data || data.races.length === 0) {
     return null;
@@ -115,6 +122,7 @@ export async function loadStaticSeasonData(
       results: race.results.map((r) => ({
         driverId: r.driverId,
         position: r.position,
+        positionText: r.positionText,
         points: r.points,
         grid: r.grid,
         status: r.status,
@@ -137,7 +145,11 @@ export async function loadStaticSeasonData(
       hasSprintRace: data.races.find((r) => r.round === entry.round)?.sprint !== null,
     }));
 
-    return { calendar, races };
+    return {
+      calendar,
+      races,
+      regularSeasonStandingOrder: data.regularSeasonStandingOrder ?? [],
+    };
   } catch {
     return null;
   }

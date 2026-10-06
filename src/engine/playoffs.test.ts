@@ -38,6 +38,7 @@ const createRace = (
   results: driverResults.map((r) => ({
     driverId: r.id,
     position: r.position,
+    positionText: r.position ? String(r.position) : 'R',
     points:
       r.position && r.position <= 10
         ? ([25, 18, 15, 12, 10, 8, 6, 4, 2, 1][r.position - 1] ?? 0)

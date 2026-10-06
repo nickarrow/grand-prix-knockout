@@ -1,9 +1,10 @@
 # 0005. Lock the qualifiers and the playoff races when the regular season ends
 
-Date: 2026-10-05, decided by the owner.
+Date: 2026-10-05, decided by the owner. Post-lock handling answered 2026-10-06.
 
 Status: Accepted. Supersedes the rule in `PROJECT_FOUNDATION.md` that the playoffs are always the last seven completed
-races. How a playoff race cancelled or added after the lock is handled is a proposal waiting for the owner.
+races. The owner answered how a playoff race cancelled or added after the lock is handled on 2026-10-06; the answers are
+recorded under "Answers (2026-10-06)".
 
 ## Context
 
@@ -32,7 +33,18 @@ Alternatives considered:
 - The locked list names races in a way that survives renumbering, such as circuit and date.
 - Until the lock, the last seven races of the current calendar are the playoffs, as now.
 
-Proposal for changes after the lock, for the owner to confirm:
+## Answers (2026-10-06)
+
+The owner confirmed the post-lock handling.
+
+- A cancelled playoff race in Rounds 1 to 3: the round is decided on the race that still runs.
+- A round that loses both its races: its two eliminations roll into the next round, which then eliminates four, so the
+  Final still has four drivers.
+- A cancelled Final: the four finalists are ranked by their Round 3 points, using the tie order of
+  `0004-tiebreak-countback-then-regular-season.md`, and the leader is champion.
+- A race added between two playoff races joins the round whose date range contains its date.
+
+## Post-lock handling as proposed
 
 - A cancelled race in Rounds 1 to 3: the round is decided on the race that remains. If a round loses both, its two
   eliminations move to the end of the next round, which then eliminates four, so the Final still has four drivers.

@@ -11,6 +11,10 @@
 // - the calendar guard of decision 0005: once the stored file shows the regular
 //   season complete, a structurally different fetched calendar fails (a changed
 //   round count, or any round's date or circuitId), while a name-only change passes.
+// Added in increment 2 (FEAT-001):
+// - every completed race result carries a positionText (decision 0004)
+// - once the regular season is complete, the stored regular-season standings order
+//   is present and non-empty (decision 0004, Option A)
 
 // Number of races that make up the playoff portion of a season. Kept in step with
 // PLAYOFF_RACES in src/constants/playoffs.ts; the script runs as plain Node and
@@ -48,8 +52,53 @@ export function validateSeasonData(fetched, stored) {
   errors.push(...validateResultCounts(fetched.races));
   errors.push(...validateNotFewerRaces(fetched, stored));
   errors.push(...validateCalendarGuard(fetched, stored));
+  errors.push(...validatePositionText(fetched.races));
+  errors.push(...validateRegularSeasonOrder(fetched));
 
   return errors;
+}
+
+// Every completed race result must carry a positionText (decision 0004: the
+// countback reads classification from it). A missing or empty positionText means
+// a result row that cannot be classified.
+export function validatePositionText(races) {
+  const errors = [];
+  for (const race of races) {
+    const results = Array.isArray(race.results) ? race.results : [];
+    for (const result of results) {
+      if (typeof result.positionText !== 'string' || result.positionText.length === 0) {
+        errors.push(
+          `Round ${race.round} has a result for ${result.driverId ?? 'an unknown driver'} with no positionText.`
+        );
+        break;
+      }
+    }
+  }
+  return errors;
+}
+
+// Once the fetched regular season is complete, the stored regular-season order
+// (decision 0004, Option A) must be present and non-empty. Before then it may be
+// empty, because the order is not yet fixed.
+export function validateRegularSeasonOrder(fetched) {
+  if (!fetchedRegularSeasonComplete(fetched)) return [];
+  const order = fetched.regularSeasonStandingOrder;
+  if (!Array.isArray(order) || order.length === 0) {
+    return [
+      'The regular season is complete but the stored regular-season standings order is missing or empty.',
+    ];
+  }
+  return [];
+}
+
+// Whether the fetched data has the regular season complete: its completed-race
+// count has reached at least the number of regular-season races (total rounds
+// minus the playoff races). Mirrors storedRegularSeasonComplete for fetched data.
+export function fetchedRegularSeasonComplete(fetched) {
+  const totalRounds = (fetched.calendar ?? []).length;
+  if (totalRounds === 0) return false;
+  const regularSeasonRaces = totalRounds - PLAYOFF_RACES;
+  return completedRaceCount(fetched.races ?? []) >= regularSeasonRaces;
 }
 
 // Rounds present in the fetched races must run 1, 2, 3, ... with no gaps.

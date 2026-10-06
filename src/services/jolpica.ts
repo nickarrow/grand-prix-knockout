@@ -40,6 +40,7 @@ interface JolpicaConstructor {
 interface JolpicaRaceResult {
   number: string;
   position: string;
+  positionText: string;
   points: string;
   Driver: JolpicaDriver;
   Constructor: JolpicaConstructor;
@@ -88,12 +89,17 @@ async function fetchJolpica<T>(endpoint: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+// A numeric positionText means the car is classified at that finishing position;
+// a letter (R, W, D, E, F, N) means it is not classified. This matches the fetch
+// script so the live fallback produces the same shape as the bundled files
+// (decision 0004).
+function isClassified(positionText: string): boolean {
+  return /^\d+$/.test(positionText);
+}
+
 // Normalize race result
 function normalizeRaceResult(result: JolpicaRaceResult): RaceResult {
-  const position =
-    result.status === 'Finished' || result.status.includes('Lap')
-      ? parseInt(result.position, 10)
-      : null;
+  const position = isClassified(result.positionText) ? parseInt(result.position, 10) : null;
 
   // Check if this driver had the fastest lap AND finished in eligible position
   const hasFastestLap = result.FastestLap?.rank === '1';
@@ -102,6 +108,7 @@ function normalizeRaceResult(result: JolpicaRaceResult): RaceResult {
   return {
     driverId: result.Driver.driverId,
     position,
+    positionText: result.positionText,
     points: parseFloat(result.points),
     grid: parseInt(result.grid, 10),
     status: result.status,
@@ -120,10 +127,7 @@ function normalizeQualifyingResult(result: JolpicaQualifyingResult): QualifyingR
 
 // Normalize sprint result
 function normalizeSprintResult(result: JolpicaRaceResult): SprintResult {
-  const position =
-    result.status === 'Finished' || result.status.includes('Lap')
-      ? parseInt(result.position, 10)
-      : null;
+  const position = isClassified(result.positionText) ? parseInt(result.position, 10) : null;
 
   return {
     driverId: result.Driver.driverId,

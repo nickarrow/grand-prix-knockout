@@ -132,6 +132,22 @@ export function pageStep(responseLimit, rowsReturned) {
   return rowsReturned > 0 ? rowsReturned : 0;
 }
 
+// Fetch the official driver-standings order for a round and return the driverIds
+// in finishing order. Reads MRData.StandingsTable.StandingsLists[0].DriverStandings,
+// which Jolpica returns sorted by position (a dense rank that does not tie), and
+// maps each entry to its Driver.driverId. Returns [] when the round has no
+// standings list yet. This is the terminal tiebreak key of decision 0004.
+export async function fetchDriverStandingsOrder(year, round, fetchJsonFn = fetchJson) {
+  const url = `${JOLPICA_BASE_URL}/${year}/${round}/driverstandings.json?limit=${PAGE_LIMIT}`;
+  const data = await fetchJsonFn(url);
+  const lists = data.MRData.StandingsTable.StandingsLists ?? [];
+  const standings = lists[0]?.DriverStandings ?? [];
+  return standings
+    .slice()
+    .sort((a, b) => parseInt(a.position, 10) - parseInt(b.position, 10))
+    .map((entry) => entry.Driver.driverId);
+}
+
 // Merge paged race entries by round, concatenating the given result array on each.
 // resultKey is 'Results', 'SprintResults' or 'QualifyingResults'.
 export function mergeByRound(pagedRaces, resultKey) {

@@ -1,9 +1,10 @@
 # 0004. Break ties by countback, then by regular-season position
 
-Date: 2026-10-05, decided by the owner.
+Date: 2026-10-05, decided by the owner. Sub-questions answered 2026-10-06.
 
-Status: Accepted in principle. Four sub-questions are open, with proposals below waiting for the owner. Increment 2
-records the answers in a new decision record and lists every historical outcome they change.
+Status: Accepted. The four sub-questions below were answered by the owner on 2026-10-06; the answers are recorded under
+"Answers (2026-10-06)". The engine change that applies this rule to every season, and the list of every historical
+outcome it moves, belong to increment 2's golden-update step and its own decision record.
 
 ## Context
 
@@ -46,7 +47,25 @@ Drivers level on points are ordered by countback first, and by regular-season po
 applies everywhere the site ranks drivers: qualification, eliminations, the drop zone, places inside elimination groups,
 finalist places 2 to 4, and the non-qualifiers.
 
-## Open sub-questions, with proposals
+## Answers (2026-10-06)
+
+The owner answered the four sub-questions. The proposals that were put, with their reasoning, are kept below under
+"Sub-questions as proposed" so the thinking is not lost.
+
+1. The countback counts only the races of the round being decided, because a round's points come from those races
+   alone.
+2. It counts every classified finishing position, with no cut-off, so a classified retiree keeps its place. Whether a
+   driver is classified is read from Jolpica's `positionText`: a numeric `positionText` means classified at that
+   position, a letter means not classified. That only classified positions count is this project's reading of the FIA
+   text, which sets no cut-off, rather than its words (inferred).
+3. Sprint finishes do not count in the countback, following the FIA's wording of "places in a race" (2021 to 2025
+   Sporting Regulations, Art. 7.2; 2026 Section A, A2.1.4c). Sprint points still count toward a round's points; only the
+   countback ignores them.
+4. The terminal fallback is regular-season finishing position, and where that cannot be its own fallback (two drivers
+   level in the regular-season standings themselves), the official F1 standings order after the last regular-season
+   race, read from Jolpica's driver standings for that round. This is Option A.
+
+## Sub-questions as proposed
 
 1. Which races the countback counts. Proposal: the races of the round being decided, because its points come from those
    races alone. The alternative is the whole season so far.
