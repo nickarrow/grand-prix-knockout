@@ -99,6 +99,63 @@ jobs:
           git commit --no-verify -m "chore(data): update ${{ steps.year.outputs.year }} season data"
           git push
 
+      # On a successful run, close any open tracking issue from a previous
+      # failure. Guarded by if: success() so it runs only when every step above
+      # passed, and it uses the same label/title lookup the failure step uses so
+      # it finds the issue that step opened.
+      - name: Close failure issue on success
+        if: success()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const LABEL = 'data-update-failure';
+            const title = 'Season data update failed';
+
+            // Find the open tracker the same way the failure step does: prefer the
+            // label, fall back to the exact title so an issue that lost the label
+            // is still closed rather than left open.
+            const labelled = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: LABEL,
+            });
+            let tracker = labelled.data[0];
+            if (!tracker) {
+              const open = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+              });
+              tracker = open.data.find((issue) => issue.title === title);
+            }
+
+            // Nothing to close if no failure issue is open.
+            if (!tracker) {
+              return;
+            }
+
+            const body = [
+              'The scheduled season data update succeeded, so this tracking issue is being closed.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `Trigger: ${context.eventName}`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: tracker.number,
+              body,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: tracker.number,
+              state: 'closed',
+              state_reason: 'completed',
+            });
+
       # On any failure above, open or update a tracking issue. Guarded by
       # if: failure() so it cannot interfere with the fetch or the commit.
       - name: Open or update failure issue

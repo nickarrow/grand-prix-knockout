@@ -1,0 +1,67 @@
+name: Deploy
+
+# Deploy to Cloudflare Pages from a GitHub Action instead of letting Cloudflare
+# build on push. The checks run first, so a commit that fails lint, the tests or
+# the build never reaches production. This is the hard gate from open question 2
+# in docs/design.md, recorded in docs/decisions/0007-deploy-gate.md.
+#
+# This workflow does nothing until the owner completes the single action in that
+# decision record: turn off Cloudflare's build-on-push, create a Pages-scoped API
+# token, and store it as the secrets named below. Both secrets are referenced by
+# NAME only; neither value is ever stored in the repository.
+on:
+  push:
+    branches:
+      - main
+
+# Least-privilege: this workflow only needs to read the repository. The deploy
+# authenticates to Cloudflare with the API token secret, not the GitHub token.
+permissions:
+  contents: read
+
+# Never let two deploys race each other.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Pin the runner image to match update-season-data.yml, so the toolchain
+    # stays stable through the playoffs rather than migrating to Ubuntu 26 mid
+    # season.
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Build before deploying. Only a clean build produces the dist/ that the
+      # upload step publishes, so a broken commit cannot reach production.
+      - name: Build
+        run: npm run build
+
+      # Direct upload of the built dist/ to Cloudflare Pages with Wrangler. The
+      # Cloudflare credentials are read from GitHub secrets by NAME; the project
+      # name is set by the owner (see docs/decisions/0007-deploy-gate.md) and must
+      # match the Cloudflare Pages project. wrangler.toml carries pages_build_output_dir.
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=grand-prix-playoffs --branch=main

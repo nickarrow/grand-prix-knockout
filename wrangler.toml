@@ -1,0 +1,14 @@
+# Wrangler configuration for the Cloudflare Pages direct upload in
+# .github/workflows/deploy.yml. See docs/decisions/0007-deploy-gate.md.
+#
+# name must match the Cloudflare Pages project the owner deploys to. It is set to
+# the current project name here; if the Pages project is named differently, the
+# owner changes this and the --project-name in deploy.yml to match.
+name = "grand-prix-playoffs"
+
+# Vite builds the site into dist/. Wrangler Pages uploads this directory.
+pages_build_output_dir = "dist"
+
+# Pin the Workers runtime compatibility date. This is a static site with no
+# Pages Functions, so the date only fixes the platform baseline.
+compatibility_date = "2026-10-06"
