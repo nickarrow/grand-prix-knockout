@@ -83,11 +83,20 @@ jobs:
       - name: Commit and push changes
         id: push
         if: steps.changes.outputs.changed == 'true'
+        # HUSKY=0 disables the git hooks for this step, and --no-verify skips them
+        # on the commit itself. This is a trusted CI job that has already run lint,
+        # the tests and the build explicitly above, and it commits one
+        # machine-generated JSON file that the fetch script already writes in the
+        # project's format. Running lint-staged here reformats that file and then
+        # trips its "prevented an empty commit" guard, which failed the 2026-10-06
+        # dispatch at this step after everything else had passed.
+        env:
+          HUSKY: 0
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add data/
-          git commit -m "chore(data): update ${{ steps.year.outputs.year }} season data"
+          git commit --no-verify -m "chore(data): update ${{ steps.year.outputs.year }} season data"
           git push
 
       # On any failure above, open or update a tracking issue. Guarded by
