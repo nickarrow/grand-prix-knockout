@@ -10,6 +10,17 @@ export default defineConfig({
       src: path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          mui: ['@mui/material', '@emotion/react', '@emotion/styled'],
+          query: ['@tanstack/react-query'],
+          router: ['react-router-dom'],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api/f1': {

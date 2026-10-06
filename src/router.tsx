@@ -1,7 +1,17 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 import { Layout } from 'src/components/layout';
-import { HomePage, SeasonPage, AboutPage, NotFoundPage } from 'src/pages';
+import { RouteFallback } from 'src/components/common';
+
+const HomePage = lazy(() => import('src/pages').then((module) => ({ default: module.HomePage })));
+const SeasonPage = lazy(() =>
+  import('src/pages').then((module) => ({ default: module.SeasonPage }))
+);
+const AboutPage = lazy(() => import('src/pages').then((module) => ({ default: module.AboutPage })));
+const NotFoundPage = lazy(() =>
+  import('src/pages').then((module) => ({ default: module.NotFoundPage }))
+);
 
 export const router = createBrowserRouter([
   {
@@ -10,19 +20,35 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <HomePage />
+          </Suspense>
+        ),
       },
       {
         path: ':year',
-        element: <SeasonPage />,
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <SeasonPage />
+          </Suspense>
+        ),
       },
       {
         path: 'about',
-        element: <AboutPage />,
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <AboutPage />
+          </Suspense>
+        ),
       },
       {
         path: '*',
-        element: <NotFoundPage />,
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <NotFoundPage />
+          </Suspense>
+        ),
       },
     ],
   },
