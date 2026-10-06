@@ -52,17 +52,21 @@ jobs:
           echo "Updating data for $YEAR season."
 
       - name: Fetch and validate season data
+        id: fetch
         run: node scripts/fetch-season-data.mjs ${{ steps.year.outputs.year }}
 
       # Build the app against the freshly fetched data before committing anything,
       # so a data change that would break the site never reaches main.
       - name: Install dependencies
+        id: install
         run: npm ci
 
       - name: Run tests
+        id: tests
         run: npm test
 
       - name: Build
+        id: build
         run: npm run build
 
       - name: Check for changes
@@ -77,6 +81,7 @@ jobs:
           fi
 
       - name: Commit and push changes
+        id: push
         if: steps.changes.outputs.changed == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -90,26 +95,91 @@ jobs:
       - name: Open or update failure issue
         if: failure()
         uses: actions/github-script@v8
+        env:
+          # The step outcomes let the issue say WHICH stage failed. A step that
+          # never ran because an earlier one failed reports an empty outcome.
+          FETCH_OUTCOME: ${{ steps.fetch.outcome }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          PUSH_OUTCOME: ${{ steps.push.outcome }}
+          SEASON_YEAR: ${{ steps.year.outputs.year }}
         with:
           script: |
+            const LABEL = 'data-update-failure';
             const title = 'Season data update failed';
+
+            // Name the stage that failed so the issue says why, as docs/design.md
+            // and docs/delivery-plan.md require. The first non-success step is the
+            // culprit; later steps report an empty outcome because they never ran.
+            const stages = [
+              ['fetch and validate season data', process.env.FETCH_OUTCOME],
+              ['install dependencies', process.env.INSTALL_OUTCOME],
+              ['run tests', process.env.TESTS_OUTCOME],
+              ['build', process.env.BUILD_OUTCOME],
+              ['commit and push changes', process.env.PUSH_OUTCOME],
+            ];
+            const failedStage = stages.find(([, outcome]) => outcome === 'failure');
+            const reason = failedStage
+              ? `Failed at: ${failedStage[0]} (year ${process.env.SEASON_YEAR}).`
+              : `Failed, but no single step reported a failure (year ${process.env.SEASON_YEAR}).`;
+
             const body = [
               'The scheduled season data update failed.',
+              '',
+              reason,
               '',
               `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               `Trigger: ${context.eventName}`,
             ].join('\n');
-            const existing = await github.rest.issues.listForRepo({
+
+            // Ensure the tracking label exists before using it. Creating it when
+            // the repository has none is idempotent: a 422 means it already exists.
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: LABEL,
+                color: 'd73a4a',
+                description: 'Automated: a scheduled season data update failed.',
+              });
+            } catch (error) {
+              if (error.status !== 422) {
+                throw error;
+              }
+            }
+
+            // Find the existing tracker. Prefer the label, but fall back to the
+            // exact title so a run that lost the label still updates one issue
+            // rather than opening a duplicate.
+            const labelled = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              labels: 'data-update-failure',
+              labels: LABEL,
             });
-            if (existing.data.length > 0) {
+            let tracker = labelled.data[0];
+            if (!tracker) {
+              const open = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+              });
+              tracker = open.data.find((issue) => issue.title === title);
+            }
+
+            if (tracker) {
+              // Make sure the tracker carries the label even if it was found by title.
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: tracker.number,
+                labels: [LABEL],
+              });
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: existing.data[0].number,
+                issue_number: tracker.number,
                 body,
               });
             } else {
@@ -118,6 +188,6 @@ jobs:
                 repo: context.repo.repo,
                 title,
                 body,
-                labels: ['data-update-failure'],
+                labels: [LABEL],
               });
             }
