@@ -100,14 +100,17 @@ places 2 to 4, and the non-qualifiers.
 Current, confirmed: the engine counts race finishes in P1 to P10 within the races being compared and then leaves the
 order to sort stability, which is the order in which drivers first appear in the season's results. Positions are missing
 for classified drivers whose status is "Retired". Finalist places 2 to 4 and the places within elimination groups sort
-by points alone. Sort stability has decided three real eliminations (verified by running the engine on the bundled
-data):
+by points alone. Sort stability has decided five real eliminations, all in Round 1 (verified by running the engine on
+the bundled data):
 
-| Season | Round   | Advanced | Eliminated | Points each |
-| ------ | ------- | -------- | ---------- | ----------- |
-| 2020   | Round 1 | Norris   | Albon      | 0           |
-| 2022   | Round 1 | Bottas   | Ocon       | 0           |
-| 2023   | Round 1 | Perez    | Gasly      | 1           |
+| Season | Round   | Advanced | Eliminated    | Points each |
+| ------ | ------- | -------- | ------------- | ----------- |
+| 2020   | Round 1 | Norris   | Albon, Stroll | 0           |
+| 2022   | Round 1 | Bottas   | Ocon, Alonso  | 0           |
+| 2023   | Round 1 | Perez    | Gasly         | 1           |
+
+Corrected on 2026-10-05: the table first gave one eliminated driver for 2020 and one for 2022, where three drivers were
+level on points and top-ten finishes in each.
 
 The About page already promises the full F1 countback, so today it promises more than the code does.
 
@@ -116,19 +119,22 @@ Proposals for the owner to confirm. Each sub-question needs an answer before inc
 1. Which races the countback counts. Proposal: the races of the round being decided, because those are the only races
    its points come from. The alternative is the whole season so far, which would hand the stronger regular-season driver
    a second advantage (inferred).
-2. How deep it counts. Proposal: every classified position, as F1 does; the FIA text sets no cut-off at tenth.
-   Classification comes from Jolpica's `positionText`, so a classified driver who retired keeps the position. A tie on 0
-   points, like the three above, would then go to whoever finished higher outside the points.
+2. How deep it counts. Proposal: every classified position. The FIA text sets no cut-off at tenth; that its places are
+   classified positions only is our reading of the text, not its words (inferred). Classification comes from Jolpica's
+   `positionText`, so a classified driver who retired keeps the position. A tie on 0 points, like those of 2020 and
+   2022, would then go to whoever finished higher outside the points.
 3. Whether sprint finishes count. The FIA countback counts places "in a race" from 2021 (Art. 7.2 of the 2021 to 2025
    Sporting Regulations; 2026 Section A, A2.1.4c), and the regulations call a sprint a sprint session, so F1 leaves
    sprints out. Proposal: follow F1 and leave them out. The alternative counts sprint places after race places, on the
    grounds that a round's points include sprint points.
 4. How a tie in the regular-season standings is broken, since "regular-season position" cannot be its own fallback.
    Option A: the order of the official F1 standings after the last regular-season race, read from Jolpica's driver
-   standings for that round. Option B: a published rule of our own, such as countback over the regular-season races,
-   then the same countback over qualifying results as the 2026 regulations do (Section A, A2.1.4c iv), then a fixed last
-   key such as the driver's permanent number. Proposal: Option A, because it gives the same order fans see in the
-   official table and leaves the project nothing to invent.
+   standings for that round. Nothing fetches the standings today, so Option A adds a request the data script does not
+   make yet, and a place in each season file to keep the answer. Option B: a published rule of our own, such as
+   countback over the regular-season races, then the same countback over qualifying results as the 2026 regulations do
+   (Section A, A2.1.4c iv), then a fixed last key such as the driver's permanent number. The 2026 text has no step after
+   the qualifying count, so that last key would be ours in every season. Proposal: Option A, because it gives the same
+   order fans see in the official table and leaves the project nothing to invent.
 
 ### Final standings
 
@@ -158,7 +164,8 @@ and each change moved the start of the playoffs, from round 18 to round 16 and t
 before the regular season ended, so no qualification was rewritten.
 
 Jolpica renumbers rounds when a race is cancelled or added (see the `f1-rules` skill). Whatever the lock stores has to
-name races in a way that survives renumbering, such as circuit and date.
+name races in a way that survives renumbering, such as circuit and date. Until the lock is stored, the data checks
+under "Data" refuse a calendar whose structure changes after the regular season, so the site keeps its last good data.
 
 Proposal for the owner to confirm, for changes after the lock:
 
@@ -222,6 +229,15 @@ Target, decided by the owner:
 
 Valid means at least: every completed sprint weekend has sprint results, the rounds run without gaps, the file has no
 fewer completed races than the one it replaces, and each race has a plausible number of results.
+
+Added on 2026-10-05 by the orchestrator, answering the review, for the owner to confirm:
+
+- The tests and the build run against the fetched data before anything is committed.
+- Until the calendar lock is stored, a calendar whose structure differs from the stored one fails validation once the
+  stored file shows the regular season complete. Structure means the number of rounds, and each round's date and
+  `circuitId`. A change of name alone passes: the 21 September data commit renamed the Qatar circuit from Losail to
+  Lusail and kept `circuitId` `losail`. On a failure the site keeps its last good data until the owner decides what
+  the change means.
 
 ## What counts as working
 
@@ -306,6 +322,11 @@ Cloudflare deploys every push to `main`, including the data workflow's, and noth
 Inferred: protecting `main` would also stop the data workflow pushing to it, so the first option needs the third. No
 recommendation yet. Decided in increment 3.
 
+Two checks come before that, in increment 1, chosen by the orchestrator on 2026-10-05: the data workflow runs the tests
+and the build against the data it fetched before it commits, and a check runs on every pull request. The first has to
+live inside the data workflow, because a push made with the workflow's `GITHUB_TOKEN` starts no other workflow
+([GitHub docs][gh-token]). Neither check stops a merge. That is still this question.
+
 ### 3. Cloudflare Pages settings
 
 The build command, Node version and preview branches live in the Cloudflare dashboard, not in the repository. The owner
@@ -320,3 +341,4 @@ cannot encode either rule until they are settled.
 [nascar-chase]: https://www.nascar.com/news-media/2026/01/12/nascar-returns-to-chase-championship-format-for-2026/
 [nascar-drivers]: https://www.nascar.com/news-media/2026/01/13/nascar-community-lauds-return-of-the-chase-championship-format/
 [motorsport-chase]: https://www.motorsport.com/nascar-cup/news/the-pros-and-cons-of-nascars-new-championship-format-for-2026/10789798/
+[gh-token]: https://docs.github.com/en/actions/concepts/security/github_token

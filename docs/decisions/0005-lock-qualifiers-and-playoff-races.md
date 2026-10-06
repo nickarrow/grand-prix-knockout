@@ -44,6 +44,13 @@ Proposal for changes after the lock, for the owner to confirm:
 ## Consequences
 
 - For 2026 the lock fell at the end of round 16 on 4 October, so the ten qualifiers listed in `docs/design.md` are
-  fixed. The code does not enforce that until increment 2; a calendar change before then would still rewrite them.
+  fixed. The engine does not enforce that until increment 2; a calendar change before then would still rewrite them.
+- So increment 1 adds a guard to the data workflow's validation instead. Once the stored file shows the regular season
+  complete, a fetched calendar whose structure differs from the stored one fails: a different number of rounds, or a
+  different date or `circuitId` for any round. The job writes nothing and opens its failure issue, and the site keeps
+  its last good data until the owner decides what the change means. A change of name alone passes, because the 21
+  September data commit renamed the Qatar circuit from Losail to Lusail and kept `circuitId` `losail`. The orchestrator
+  chose this on 2026-10-05, answering the review, over enforcing the lock in increment 1, and the owner can overrule it
+  at review.
 - The seasons 2020 to 2025 have final calendars, so locking changes none of their outcomes (inferred).
 - Where the lock is stored, in the season's data file or elsewhere, is increment 2's call.

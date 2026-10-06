@@ -35,7 +35,7 @@ Checked on 2026-10-05.
 | `npm run build`           | Passes. Main chunk 612.79 kB, 190.87 kB gzipped, over Vite's 500 kB warning                                     |
 | Playwright                | Connected to Kiro and working; used for the season replays on 2026-10-05                                        |
 | Jolpica                   | Reachable. Season endpoints for results, sprint and qualifying page correctly. 4 requests a second, 500 an hour |
-| Data workflow             | Failing. Runs #40, #41 and #42 failed in "Fetch season data"; the last success was #39 on 21 September          |
+| Data workflow             | Failing. Runs #35, #40, #41 and manual run #42 failed in "Fetch season data"; last success #39, 21 September    |
 | Production                | Live, showing 14 of the 16 races 2026 has run                                                                   |
 | Cloudflare Pages settings | Not in the repository. The owner will supply them (`docs/design.md`, open question 3)                           |
 
@@ -47,8 +47,9 @@ February, "add eliminated label under red points", touching `DriverRow.tsx` and 
 
 - The five rules under "What has to stay true" in `AGENTS.md` hold in every increment.
 - Never push to `main`. One branch and one pull request per increment, or per feature inside one. The owner merges.
-- Anything merged to `main` is live within minutes and nothing checks it first, until increment 3's deploy gate lands.
-  Every merge is a release.
+- Anything merged to `main` is live within minutes. From increment 1 a check runs on every pull request and the data
+  workflow runs the tests and the build before it commits, but nothing stops a merge until increment 3's branch
+  protection and deploy gate land. Every merge is a release.
 - The data workflow commits to `main` every Monday at 06:00 UTC, so a branch that touches `data/` should expect
   conflicts in `data/2026.json`. Those runs also set the deadlines: 12 October after Singapore, 26 October after the
   United States Grand Prix, 7 December after the Final.
@@ -98,7 +99,9 @@ and their sources come first.
 
 - Review and merge the pull request.
 - Answer the four tie sub-questions and the calendar proposal in `docs/design.md` before increment 2 starts.
-- Decide what happens to `feat/elimination-label` and the stash.
+- Decide what happens to `feat/elimination-label` and the stash before increment 1 starts. The branch's one commit
+  changes `DriverRow.tsx` and `palette.ts`, which draw the red elimination points that increment 1 changes, and the
+  stash changes `src/hooks/usePlayoffData.ts`, `src/pages/HomePage.tsx` and `src/components/standings/index.ts`.
 
 ### Done, 2026-10-05
 
@@ -106,7 +109,8 @@ Observed: the documents and skills above were written on the branch `docs/adopt-
 nothing under `src/` changed. Facts in the documents were checked on the day: the FIA regulations for 2020 to 2026 by
 reading the PDFs; Jolpica by its documentation and by read-only requests to the season endpoints; the engine by running
 it over the bundled seasons; the status line and the mid-round bug by replaying 2025 at 16, 17, 18 and 19 races with
-Playwright.
+Playwright. After the review, `npm test`, `npm run lint`, `npm run build` and the Prettier check were run again and
+printed what the prerequisites table says.
 
 Deviated: a short always-on steering file stayed, because a workflow step session on 2026-10-05 received steering and no
 skills. `NOTICE.md` came in, because the copyright holder in this repository's `LICENSE` differs from the bootstrap's.
@@ -114,19 +118,81 @@ The replay technique in the `review` skill fetches the season file without its `
 `route.fetch()` returns Vite's JavaScript module rather than JSON.
 
 Still unverified: whether skills register in workflow step sessions once they exist on `main`; the Cloudflare Pages
-settings; whether a 429 from Jolpica carries `Retry-After`; everything marked inferred in `docs/design.md`.
+settings; whether a 429 from Jolpica carries `Retry-After`; whether 2024, 2025 or 2026 Section A has a later FIA issue,
+since the FIA's index timed out; everything marked inferred in `docs/design.md`.
 
-Review, completed by the apply-findings step:
+Review, on 2026-10-05. Five reviewers ran in parallel, each against its own source:
 
-- Reviewers and their mandates: to be filled in.
-- Findings at each severity, blocking, should fix and note: to be filled in.
-- Accepted: to be filled in.
-- Rejected, with the reasons: to be filled in.
+- Against the code: every claim about today's behaviour, checked in `src/`, `scripts/` and `.github/`. 2 findings.
+- Against the source: the FIA regulations, Jolpica's documentation and the live API. 5 findings.
+- Red team: this plan against `docs/design.md` and the 2026 calendar. 17 findings.
+- Do it: increment 1's paging and the season replay, carried out rather than read. 1 finding.
+- Cold read: the files read as an agent starting increment 1 would read them. 8 findings.
+
+That is 33 findings. By the reviewers' own labels 6 were blocking, 9 should fix and 12 notes; the source and do-it
+reviewers labelled none of their 6. Each was checked against the file it concerns before anything changed.
+
+Accepted and applied, 19:
+
+- `f1-rules`: the final FIA issue for each season, with the cited articles read again in them; `position` and `points`
+  arrive from Jolpica as strings; the status enumeration has eight values, five of them in the bundled 2025 file; the
+  2026 countback has no step after the qualifying count.
+- `docs/design.md` and `0004`: counting only classified positions marked as our reading, and the 2026 text's missing last
+  step; the design names the new fetch that Option A needs.
+- This plan: the run history matches the design and the GitHub run list; increment 1's merge order; the refresh keeps
+  today's classification on purpose; the replay technique named; an accessibility check for the at-risk marking; where
+  a dispatched test run commits; a decision on the fallback if the 429s continue; increment 2's re-fetch counted at about
+  73 requests; increment 2 waits on the owner's answers; the branch and stash decided before increment 1.
+- `AGENTS.md`: a workflow working in a worktree names this file and the worktree in every step's prompt.
+- `read-first.md`: the worktree rule first, and `review` named for replays. `codebase-conventions`: golden tests pin a
+  baseline that sort stability decided in places, and a pointer to the replay technique.
+
+Put to the owner, 4. The orchestrator answered on the owner's behalf on 2026-10-05, and the owner can overrule any of it:
+
+- The drop zone ordered by sort stability until increment 2 (red team, blocking): regular-season position becomes its
+  last key in increment 1, for 2026 only. `0003`, `0004` and increment 1 updated.
+- The calendar lock not enforced during Round 1 (red team, blocking): no lock yet, but increment 1's validation refuses a
+  changed calendar. `0005`, `docs/design.md` and increment 1 updated.
+- Both deadline increments ship unchecked (red team, should fix): the data workflow runs the tests and the build before
+  it commits, and a check runs on pull requests, both in increment 1. Branch protection and the deploy gate stay in
+  increment 3.
+- Increment 1 overloaded (red team, should fix): declined. The permissions, the failure issue and the runner pin stay,
+  with the issue step behind `if: failure()`.
+
+Noted for the owner with no change, 1: the owner is the only person who merges, dispatches and decides (red team). A
+delegate is the owner's to name.
+
+Rejected, 9:
+
+- The health lines were not re-run by the code reviewer. They are dated observations, not claims to fix, and run again
+  after the review they still hold.
+- The trigger is 17 races, not 16. "Why this shape" in increment 1 already puts the danger at the 12 October run, after
+  one race of Round 1; by the reviewer's own account the 16-race framing came from its brief.
+- Decide the `User-Agent` before the run. It is already in increment 1's Needs from you, which come before the merge,
+  and Jolpica's limits are per IP address or token, so the header is not part of the 429 fix (inferred).
+- Jolpica is the only source. The design already covers an outage: the last good file stays and the job fails. No
+  second source has existed since February, so removing the OpenF1 settings removes no fallback.
+- The rename is dated before the name is chosen. Increment 4 makes the name its first deliverable and its first Needs
+  from you, and nothing before it depends on the name.
+- Keep the replay fetch without its query string. The `review` skill already does, and "Deviated" above says why.
+- Give `project-docs` a reading trigger. `AGENTS.md` already says `docs/design.md` holds the rules, and the skill is
+  about writing the documents, so loading it would not supply a rule.
+- Status-line wording that avoids a countdown. The design's target already says the regular season is complete where
+  today's site says "0 races until playoffs".
+- Say in `f1-rules` that the bundled 2026 file is stale. The design says the site shows 14 races and Jolpica 16, the plan
+  holds the refresh, and the skill's first line keeps it to F1's rules and Jolpica's data.
+
+Found while confirming, and not one of the 33: the sort-stability tables in `docs/design.md` and `0004` gave one
+eliminated driver for 2020 and for 2022, where three drivers were level in each. Both corrected, with the date.
 
 ## Increment 1: ready for Singapore
 
 Merged and deployed before the data run on Monday 2026-10-12 at 06:00 UTC. The Singapore Grand Prix on Sunday 11 October
 is round 17 of 23, a sprint weekend, and the first race of Round 1.
+
+On 2026-10-05, answering the review, the orchestrator added four things to this increment: regular-season position as
+the drop zone's last key, the calendar guard, the tests and the build inside the data workflow, and the pull-request
+check. It also kept the workflow hardening here rather than in a follow-up. The owner can overrule any of it at review.
 
 ### Delivers
 
@@ -138,17 +204,35 @@ The data pipeline:
 - Errors on the qualifying and sprint fetches reported instead of swallowed.
 - Validation before anything is written: every completed sprint weekend has sprint results, the rounds run without gaps,
   the new file has no fewer completed races than the one it replaces, and each race has a plausible number of results.
-- When validation fails, nothing is written, the job fails, and a GitHub issue is opened or updated with the reason.
+- A calendar guard in that validation. Once the stored file shows the regular season complete, a fetched calendar whose
+  structure differs from the stored one fails: a different number of rounds, or a different date or `circuitId` for
+  any round. A change of name alone passes, because the 21 September data commit renamed the Qatar circuit from Losail
+  to Lusail and kept `circuitId` `losail`. The site keeps its last good data until the owner decides what the change
+  means (`docs/decisions/0005-lock-qualifiers-and-playoff-races.md`).
+- `npm ci`, `npm test` and `npm run build` run against the fetched data before anything is committed. A push made with
+  `GITHUB_TOKEN` starts no other workflow ([GitHub docs][gh-token]), so a separate check would never see the bot's
+  commits.
+- When validation or those checks fail, nothing is written, the job fails, and a GitHub issue is opened or updated with
+  the reason. The issue step runs only after a failure (`if: failure()`), so it cannot affect the fetch.
 - Least-privilege permissions for the workflow: `contents: write` and `issues: write`.
 - `actions/checkout` and `actions/setup-node` moved from v4, which runs on the deprecated Node 20, to their Node 24
   majors, with the current versions checked at the time.
-- The runner image pinned through the playoffs, because `ubuntu-latest` moves to Ubuntu 26 from 19 October 2026.
-- A concurrency group, and a second Monday run as a retry if it proves worth having.
+- The runner image pinned through the playoffs, because `ubuntu-latest` moves to Ubuntu 26 gradually between 19 October
+  and 19 November 2026 ([GitHub changelog, 17 September 2026][ubuntu26]), starting in the middle of Round 1.
+- A concurrency group, and a second Monday run as a retry if you want one (see Needs from you).
+
+Checks on pull requests:
+
+- A workflow that runs `npm run lint`, `npm run format:check`, `npm test` and `npm run build` on every pull request.
+- The Prettier failure in `src/pages/AboutPage.tsx` fixed, so the format check passes.
 
 The playoff display:
 
 - The engine stops marking eliminations in an unfinished round and reports the drop zone instead
   (`docs/decisions/0003-drop-zone-until-round-complete.md`).
+- Regular-season position as the comparator's last key, after today's top-ten count, for 2026 only: the drop zone, and
+  any 2026 round that completes before increment 2 lands. Completed seasons keep today's ordering until increment 2
+  changes them all at once (`docs/decisions/0004-tiebreak-countback-then-regular-season.md`).
 - "Eliminated Round N" banners, red points and elimination chips only for completed rounds.
 - The status line fixed for every stage listed in `docs/design.md`.
 - The "Did Not Advance" banner shown from the end of the regular season.
@@ -157,31 +241,48 @@ Tests and data:
 
 - Golden regression tests pinning every completed season's outcome, meaning its qualifiers, each round's eliminations
   and its champion, written and passing before the engine changes.
-- `data/2026.json` refreshed to 16 races in the same branch.
+- `data/2026.json` refreshed to 16 races in the same branch, keeping today's status-based positions on purpose. Reading
+  classification from `positionText` belongs to increment 2, because it changes completed seasons.
 
 ### Deliberately not
 
-Tiebreak changes, the calendar lock, team colours and the rename.
+The full tie rule, and any change to the order of a completed season. The calendar lock itself: this increment only
+refuses a changed calendar. Classification from `positionText`. Branch protection and the deploy gate, which interact
+with the data workflow's pushes to `main` and need settings only the owner can change. Team colours and the rename.
 
 ### Why this shape
 
 Two faults meet on 12 October. Without a working pipeline, Singapore never reaches the site. With the current engine,
-the site would eliminate two drivers after one race of Round 1. Fixing either alone still ships a visible error. The
-golden tests go first because the engine change must not move any completed season. The tie rule waits for increment 2:
-the first real eliminations come only after 25 October, and the rule needs the owner's answers first.
+the site would eliminate two drivers after one race of Round 1. Fixing either alone still ships a visible error. So the
+engine and display changes and the refreshed data deploy together, and the pipeline change merges with them or after
+them, never before: a working pipeline on its own would put Singapore on a display that still eliminates after one race.
+
+The golden tests go first because the engine change must not move any completed season. The full tie rule waits for
+increment 2, because it needs the owner's answers and moves completed seasons. The drop zone cannot wait for it. From
+the 12 October run it ranks drivers on the live site, after one race several of them can be level, and today's code
+would leave their order to sort stability. Regular-season position as the last key, for 2026 alone, keeps that order
+deterministic without touching a completed season, so the golden tests stay unchanged and no past season changes twice.
 
 ### How you know it worked
 
 - Named unit tests pass, among them one asserting that with one of a round's two races run, nobody is eliminated and the
-  two drivers at the bottom are reported as at risk, and one asserting that validation rejects a season whose completed
-  sprint weekend has no sprint results.
+  two drivers at the bottom are reported as at risk; one asserting that two 2026 drivers level on points and on top-ten
+  finishes are ordered by regular-season position; one asserting that validation rejects a season whose completed
+  sprint weekend has no sprint results; and one asserting that, once the regular season is complete, a calendar with a
+  changed date fails validation while a renamed circuit passes.
 - A Playwright replay of 2026 at 14, 15 and 16 races shows two, then one, regular-season race left, and at 16 a
   completed regular season with Singapore named as the first playoff race and the "Did Not Advance" banner in place.
+  The replay technique is in the `review` skill.
 - A replay of 2025 cut at 16, 17, 18 and 19 races, where Round 1 is races 18 and 19: 16 shows one regular-season race
   left; 17 shows the regular season complete; 18 shows a drop zone and no eliminations; 19 shows Round 1's eliminations
   and names Round 2 as next.
+- At each replay cut the accessibility tree names the at-risk drivers in words with no driver row expanded, because Tab
+  cannot reach a row until increment 3.
 - The golden tests pass unchanged.
-- The new workflow runs successfully on GitHub's runners on the feature branch, dispatched by the owner.
+- The new workflow runs successfully on GitHub's runners on the feature branch, dispatched by the owner, with its test
+  and build steps passing before the commit step. Run that way it pushes to the feature branch, as today's plain
+  `git push` would, never to `main`, and it commits nothing when the data has not changed.
+- The pull request for this increment shows the new check passing.
 
 ### Needs from you
 
@@ -190,6 +291,9 @@ the first real eliminations come only after 25 October, and the rule needs the o
 - Merging before Monday 12 October at 06:00 UTC.
 - A decision on adding a custom `User-Agent` to the script and the API client. Jolpica's documentation asks every client
   for one, and this was found on 2026-10-05, after the scope of this increment was agreed.
+- A decision, before 12 October, on the fallback if the fixed run still gets a 429: the second Monday run above, a run
+  of the script from your machine as on 5 October, or both. That the 429s come from the hourly allowance shared on
+  GitHub's runner addresses is inferred (`docs/design.md`, "Data").
 
 ## Increment 2: rules you can defend
 
@@ -198,11 +302,14 @@ which completes Round 1 and makes the first real eliminations of 2026.
 
 ### Delivers
 
-- Countback over all classified positions per the FIA rule, then regular-season position, recorded in a new decision
-  record that answers the sub-questions of `docs/decisions/0004-tiebreak-countback-then-regular-season.md`.
+- Countback over every classified position, as sub-question 2 proposes, then regular-season position, recorded in a new
+  decision record that answers the sub-questions of `docs/decisions/0004-tiebreak-countback-then-regular-season.md`.
+  It applies to every season at once and replaces increment 1's interim key for 2026.
 - Classified retirees keeping their positions, read from `positionText`. The bundled files do not hold `positionText`
-  today, so 2020 to 2025 have to be fetched again, which the season endpoints from increment 1 make affordable. A
-  re-fetch can also bring remapped status strings for the older seasons (`f1-rules` skill).
+  today, so 2020 to 2025 have to be fetched again. Through increment 1's season endpoints, at 100 results a page for
+  results, sprints and qualifying plus one schedule request a season, that is about 73 requests, where today's three
+  requests a race would take about 400 (counted from the bundled files on 2026-10-05). A re-fetch can also bring
+  remapped status strings for the older seasons (`f1-rules` skill).
 - Deterministic ordering everywhere: places inside elimination groups, finalist places 2 to 4, and the non-qualifiers.
 - The calendar lock, recorded in a new decision record that settles the proposal in
   `docs/decisions/0005-lock-qualifiers-and-playoff-races.md`.
@@ -215,9 +322,10 @@ The rename, and the cleanup in increment 3.
 
 ### Why this shape
 
-The data run of 26 October makes the first real eliminations, and a tie at the cut that day would be settled by sort
-stability. The golden tests from increment 1 make every historical change this rule causes visible, so it can be listed
-rather than slipped in.
+The data run of 26 October makes the first real eliminations. Without this increment a tie at the cut that day is
+settled by increment 1's interim key, the top-ten count and then regular-season position. That is deterministic, and it
+is not the rule the About page promises. The golden tests from increment 1 make every historical change the full rule
+causes visible, so it can be listed rather than slipped in.
 
 ### How you know it worked
 
@@ -230,7 +338,8 @@ rather than slipped in.
 
 ### Needs from you
 
-- Answers to the four tie sub-questions and to the calendar proposal.
+- Answers to the four tie sub-questions and to the calendar proposal. This increment cannot start without them, so the
+  day they arrive decides whether it can merge before 26 October.
 - The colours to use for the six missing constructorIds, or approval of the ones proposed.
 - Merging before Monday 26 October at 06:00 UTC.
 
@@ -250,11 +359,11 @@ No race deadline. Lands before increment 4.
   and `hasStaticData`, plus two more found on 2026-10-05, `DEFAULT_SEASON` and the OpenF1 settings
   (`OPENF1_API_BASE_URL` and `VITE_OPENF1_API_URL`).
 - The DRY and magic-number fixes listed in the `codebase-conventions` skill.
-- The Prettier failure in `src/pages/AboutPage.tsx`.
 - Bundle size: the main chunk is 612.79 kB.
 - A documentation refresh, including `docs/DEPLOYMENT.md`, which overlaps the design document and holds Cloudflare
   settings nobody has checked.
-- The deploy gate from open question 2 in `docs/design.md`, with a decision record.
+- Branch protection and the deploy gate from open question 2 in `docs/design.md`, with a decision record. Increment 1's
+  pull-request check is what they would enforce.
 - The `hasSprintRace` bug: `static-data.ts` sets it true for rounds not yet run, because `undefined !== null`. Nothing
   reads it today.
 - The driver-name column wrapping on desktop.
@@ -322,3 +431,6 @@ the most to show.
 - Registering the domain, and access to the registrar and to Cloudflare.
 - Renaming the repository and the Cloudflare project.
 - Whatever announcement goes with the relaunch.
+
+[gh-token]: https://docs.github.com/en/actions/concepts/security/github_token
+[ubuntu26]: https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration/

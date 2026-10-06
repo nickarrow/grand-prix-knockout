@@ -37,7 +37,9 @@ Three options were plausible.
 - No completed season changes, because every round in them is complete.
 - The interface needs drop-zone wording the owner approves.
 - The drop zone uses the same tie order as eliminations. Until increment 2 replaces it, a tie at the edge of the drop
-  zone is settled by today's countback and then by sort stability, so between the Singapore and United States data runs
-  an at-risk marking could rest on input order (inferred).
+  zone is settled by today's top-ten countback and then by regular-season position, the last key increment 1 adds for
+  2026 so that no at-risk marking rests on input order (`0004-tiebreak-countback-then-regular-season.md`). Corrected on
+  2026-10-05: this bullet first said the marking could rest on input order between the Singapore and United States data
+  runs, and labelled that inferred. The review confirmed the code path, and the orchestrator added the key in answer.
 - A round counts as complete when every race in it has results in the data. A race cancelled after the regular season
   ends is covered by the proposal in `0005-lock-qualifiers-and-playoff-races.md`.
