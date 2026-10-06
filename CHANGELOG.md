@@ -6,7 +6,33 @@ is not a library anybody depends on.
 
 Changes before 2026.10.05 are in the git log.
 
-## 2026.10.05
+## Unreleased
+
+Increment 2: the tiebreak rule you can defend. On the `increment-2-tiebreaks` branch, awaiting the owner's local review
+and merge.
+
+### Added
+
+- `positionText` on every race result and a stored official regular-season standings order
+  (`regularSeasonStandingOrder`) in each `data/<year>.json`, fetched by `scripts/fetch-season-data.mjs` and read by the
+  engine as the terminal tiebreak key (`docs/decisions/0004`, Option A).
+- Team colours for all 16 constructorIds in the 2020 to 2026 data, so no driver row falls back to grey.
+- The decision 0005 calendar-change rules in the engine: a cancelled playoff race decided on the race that still runs, a
+  round losing both races rolling its eliminations into the next, a cancelled Final ranked on Round 3 points, and an
+  added race joining the round whose date window contains it.
+- `docs/decisions/0006`, the season-by-season record of the historical outcomes the new rule changes.
+- Tie-case tests built so the data's first-appearance order opposes the asserted winner, so no test passes on sort
+  stability.
+
+### Changed
+
+- The tiebreak rule is now a countback over every classified finishing position in the round's races (read from
+  `positionText`, sprints excluded), then regular-season position, then the official standings order as a terminal key
+  that never ties. It replaces the old P1-P10 countback and the 2026-only interim scoping, and applies to every season
+  at once. Four completed seasons move: 2020's champion changes (Hamilton to Verstappen), 2023's Round 1 and 2
+  eliminations change, and 2021 and 2022 reorder an eliminated pair. 2024, 2025 and 2026 are unchanged
+  (`docs/decisions/0006`).
+- The About page describes the tiebreak rule as built, extracted into `TiebreakerExplainer`.
 
 The project's working practice and its rules are now written down. Nothing a visitor sees has changed: no file under
 `src/`, `scripts/`, `data/` or `.github/` was touched, and neither were `package.json` or `package-lock.json`.

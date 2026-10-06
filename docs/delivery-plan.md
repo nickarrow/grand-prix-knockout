@@ -351,6 +351,65 @@ causes visible, so it can be listed rather than slipped in.
 - The colours to use for the six missing constructorIds, or approval of the ones proposed.
 - Merging before Monday 26 October at 06:00 UTC.
 
+### Done, 2026-10-06
+
+On the branch `increment-2-tiebreaks` in the main checkout, four commits: carry `positionText` and the stored
+regular-season order through the data model; the full-classification countback applied to every season; the decision
+0005 calendar-change rules; and the About page rewrite with team colours for all 16 constructorIds.
+
+Observed. The full pre-merge verification ran once more and printed: `npm test` 102 passed across 7 files, the golden
+suite 7 of 7; `npm run lint` exit 0 with no warnings; `npx prettier --check --end-of-line auto "src/**/*.{ts,tsx,css,json}"`
+all matched files use Prettier code style; `npm run build` type-checked with `tsc -b` and built with Vite clean, the
+only warning being the pre-existing 500 kB index chunk (618.29 kB, increment 3's concern).
+
+The golden change list is recorded season by season in `docs/decisions/0006-full-classification-countback-golden-changes.md`.
+The changed set is exactly {2020, 2021, 2022, 2023}; 2024, 2025 and 2026 are unchanged. 2020 is the only champion change,
+Hamilton to Verstappen, from a Round 1 three-way zero-point tie that the old P1-P10 countback left to sort stability and
+the full countback now decides on track (Albon's classified 12th over Norris's 13th), cascading through the bracket to a
+Verstappen win in the one-race Abu Dhabi final. 2023 changes who is eliminated in Rounds 1 and 2 (Gasly's classified
+12th survives over Perez), same champion. 2021 Round 3 and 2022 Round 2 are order-only reorderings of an eliminated
+pair, decided by the terminal official-standings key and a classified 15th respectively, same finalists and champions.
+
+Playwright observations (dev server, 390x844): 2022 renders Verstappen champion with the full-rule Round 1 order and
+Bottas advancing with a tie badge on zero Round 1 points; 2020 renders Verstappen champion with the 0006 cascade, 23
+accent bars in 10 colours and no grey fallback; 2026 renders 11 colours with Audi and Cadillac distinct and no grey
+fallback. The constructorId union across 2020-2026 is exactly the 16 ids now in `TEAM_COLORS`, so no row can fall back to
+grey. The About page Tiebreakers text renders the full rule as built.
+
+Data-source decision as recorded. The official regular-season order is fetched by `scripts/fetch-season-data.mjs`
+(`fetchDriverStandingsOrder` for round `totalRounds - 7`) and stored in each `data/<year>.json` as
+`regularSeasonStandingOrder` (decision 0004, Option A). The engine does not fetch it: `calculatePlayoffState` reads the
+stored array passed in, and the service layer reads it from the bundled file. Stored lengths are 21/21/21/22/22/21/23 for
+2020 to 2026, a dense rank with no ties.
+
+Deviated. The planner's provisional flip set was {2020, 2022, 2023}; the real diff added 2021 (an order-only reorder of
+the Round 3 eliminated pair) and flipped the 2020 champion. The owner approved the full diff including the champion flip
+via a send_message warning during FEAT-002, and 0006 lists all four seasons. The re-fetch remapped no status strings for
+any season (f1-rules warned older seasons could be remapped; none was). Switching classification to `positionText` moved
+`position` on 57 results (classified retirees now keep their place) and reverted 2 (lapped-but-unclassified cars), none
+of them in a points-scoring position, so points and the golden points totals are unchanged. `playoffs.ts` grew to about
+255 lines after the calendar-change rules, over the ~150-line engine guidance; FEAT-003 extracted the race-to-round
+mapping into `playoff-schedule.ts` and judged there is no further clean seam without cutting the one orchestration across
+files. No decision record was written for the calendar-change rules themselves; they are recorded in 0005's 2026-10-06
+answers.
+
+Still unverified. The live-API fallback for an unsupported season has no stored order, so a genuine tie there falls to
+countback-only and can return 0; this is bounded to unsupported live years the service layer should not reach for a
+supported season (review note, 0004 answer 4, 0006 consequences). The display-only `wins`/`podiums` counts still read
+`result.position` while the countback reads `positionText`; they disagree only outside the top three and feed no
+ordering, left for increment 3 (review note). The "abandoned final = empty results array" engine input contract is not
+yet produced by the data layer; if a real cancelled final ever occurs the service layer must emit the final race with
+empty results (FEAT-003 note). The 500 kB chunk warning is increment 3's concern.
+
+Review, 2026-10-06: APPROVED (`.agents/tasks/grand-prix-playoffs-increment-2-tiebreaks-2026-10-06/review.json`). The
+reviewers confirmed the comparator order, the 0006 deciding finishes against `data/<year>.json`, the stored order for all
+seven seasons, the golden values and the tie tests built so first-appearance order opposes the asserted winner. Four
+findings, all notes, none blocking: the bounded live-API fallback, the approved 2021-and-champion diff, the
+`wins`/`podiums` source mismatch, and `playoffs.ts` length. Two leads were raised and rejected after reading the file
+(the sprint win does not leak into the countback; 0006's 2020 Stroll claim holds).
+
+The branch is ready for local review and merge. Not pushed and not merged, per `AGENTS.md`.
+
 ## Increment 3: cleanup
 
 No race deadline. Lands before increment 4.
