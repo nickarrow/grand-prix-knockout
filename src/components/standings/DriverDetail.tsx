@@ -86,7 +86,7 @@ export function DriverDetail({
         accentColor={teamColor}
       />
 
-      {/* Playoffs - single consolidated section */}
+      {/* Knockout - single consolidated section */}
       {knockoutRaces.length > 0 && (
         <PhaseSection
           type="knockout"

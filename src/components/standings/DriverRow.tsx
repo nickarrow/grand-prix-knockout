@@ -86,7 +86,7 @@ export function DriverRow({
   const eliminatedR2 = elimRound === 2;
   const eliminatedR3 = elimRound === 3;
 
-  // Non-qualifiers show all playoff points as muted
+  // Non-qualifiers show all knockout points as muted
   const isNonQualifier = !didQualify;
 
   // Check if driver was already eliminated before a given round (for muted styling)

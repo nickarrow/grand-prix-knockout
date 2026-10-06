@@ -21,7 +21,7 @@ interface PhaseSectionProps {
   driverId: string;
   points: number;
   accentColor?: string;
-  // Playoff-specific props
+  // Knockout-specific props
   didAdvance?: boolean;
   eliminatedInRound?: number | null;
   eliminationRaceNumber?: number | null;
@@ -110,7 +110,7 @@ export function PhaseSection({
     return roundRaces.length > 0 && roundRaces.every((r) => isRaceGhost(r));
   };
 
-  // Group races by playoff round for playoffs section
+  // Group races by knockout round for knockout section
   const getRacesByRound = (): { roundNum: number; races: Race[]; points: number }[] => {
     if (type !== 'knockout' || knockoutRounds.length === 0) return [];
 
@@ -178,7 +178,7 @@ export function PhaseSection({
           {phaseLabel}
         </Typography>
 
-        {/* Elimination chip for playoff section */}
+        {/* Elimination chip for knockout section */}
         {wasEliminated && (
           <Chip
             label={`Elim R${eliminatedInRound}`}
@@ -214,7 +214,7 @@ export function PhaseSection({
       <Collapse in={expanded} timeout="auto">
         <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
           {showRoundByRound ? (
-            // Playoffs: Show races grouped by round
+            // Knockout: Show races grouped by round
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {racesByRound.map(({ roundNum, races: roundRaces, points: roundPoints }) => {
                 const roundIsGhost = isRoundGhost(roundRaces);
