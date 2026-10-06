@@ -61,7 +61,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
       <Container maxWidth="lg">
         <Box sx={{ py: { xs: 2, md: 4 } }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            {seasonYear} Grand Prix Playoffs
+            {seasonYear} Grand Prix Knockout
           </Typography>
           <KnockoutExplainer compact />
           <Alert severity="info" sx={{ mt: 2 }}>
@@ -94,10 +94,10 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
 
     if (status === 'regular-season') {
       const racesLeft = regularSeasonRaces - completedRaces;
-      // The last regular-season race has run, but no playoff race yet: say the
-      // regular season is complete and name the race that opens the playoffs.
+      // The last regular-season race has run, but no knockout race yet: say the
+      // regular season is complete and name the race that opens the knockout.
       if (racesLeft <= 0) {
-        return `Regular season complete • Playoffs open at ${knockoutOpenerName()}`;
+        return `Regular season complete • Knockout opens at ${knockoutOpenerName()}`;
       }
       if (racesLeft === 1) {
         return `Race ${completedRaces} of ${totalRaces} • 1 regular-season race left`;
@@ -111,10 +111,10 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
       if (inProgressRound.round === FINAL_ROUND_NUMBER) {
         return `Championship Final • Race ${completedRaces} of ${totalRaces}`;
       }
-      return `Playoff Round ${inProgressRound.round} • Race ${completedRaces} of ${totalRaces}`;
+      return `Knockout Round ${inProgressRound.round} • Race ${completedRaces} of ${totalRaces}`;
     }
 
-    // No round in progress but in the playoffs: we are between completed rounds.
+    // No round in progress but in the knockout: we are between completed rounds.
     const lastComplete = [...rounds].reverse().find((r) => r.isComplete);
     if (lastComplete && lastComplete.round < FINAL_ROUND_NUMBER) {
       const nextRound = lastComplete.round + 1;
@@ -122,7 +122,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
       return `Round ${lastComplete.round} complete • ${nextLabel} next • Race ${completedRaces} of ${totalRaces}`;
     }
 
-    return `Playoffs • Race ${completedRaces} of ${totalRaces}`;
+    return `Knockout • Race ${completedRaces} of ${totalRaces}`;
   };
 
   // Get champion info for completed seasons
@@ -146,7 +146,7 @@ function SeasonStandings({ seasonYear }: { seasonYear: number }): React.ReactEle
     <Container maxWidth="lg">
       <Box sx={{ py: { xs: 2, md: 4 } }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          {knockoutState.season} Grand Prix Playoffs
+          {knockoutState.season} Grand Prix Knockout
         </Typography>
 
         <KnockoutExplainer compact />

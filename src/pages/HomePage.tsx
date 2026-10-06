@@ -39,7 +39,7 @@ export function HomePage(): React.ReactElement {
             component="h1"
             sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '1.75rem', md: '2.5rem' } }}
           >
-            Grand Prix Playoffs
+            Grand Prix Knockout
           </Typography>
           <Typography
             variant="h6"
@@ -47,16 +47,17 @@ export function HomePage(): React.ReactElement {
             color="text.secondary"
             sx={{ mb: 2, fontWeight: 400 }}
           >
-            The F1 championship, reimagined.
+            F1's knockout qualifying, stretched across a championship.
           </Typography>
           <Typography
             variant="body1"
             color="text.secondary"
             sx={{ maxWidth: 600, mx: { md: 'auto' }, mb: 1.5, lineHeight: 1.7 }}
           >
-            F1 titles are often decided before the final race. Grand Prix Playoffs reimagines the
-            championship as a playoff where the top 10 drivers from the regular season advance to a
-            7-race playoff until only 4 drivers remain for a winner-take-all finale.
+            Qualifying knocks drivers out session by session until one takes pole. Grand Prix
+            Knockout does the same to the title. The top 10 drivers from the regular season carry
+            into a 7-race knockout, each round drops the slowest, and 4 drivers reach a
+            winner-take-all finale.
           </Typography>
           <Box
             sx={{

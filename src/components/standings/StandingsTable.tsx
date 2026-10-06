@@ -134,7 +134,7 @@ function groupDriversByElimination(
   // Only show non-qualifiers banner after regular season is complete
   if (nonQualifiers.length > 0 && regularSeasonComplete) {
     groups.push({
-      label: 'Did Not Advance to Playoffs',
+      label: 'Did Not Advance to the Knockout',
       drivers: nonQualifiers,
       type: 'non-qualifiers',
     });
@@ -230,7 +230,7 @@ export function StandingsTable({
           overflowX: 'auto',
         }}
       >
-        <Table size="small" aria-label="Playoff standings">
+        <Table size="small" aria-label="Knockout standings">
           <TableHead>
             <TableRow sx={{ bgcolor: 'action.hover' }}>
               <TableCell sx={{ width: 36, p: 1 }} align="right">

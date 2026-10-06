@@ -15,7 +15,7 @@ export function Footer(): React.ReactElement {
     >
       <Container maxWidth="lg">
         <Typography variant="body2" color="text.secondary" align="center">
-          © {currentYear} Grand Prix Playoffs. A fan made project.
+          © {currentYear} Grand Prix Knockout. A fan made project.
         </Typography>
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
           Not affiliated with Formula One Group, FIA, or Formula 1.{' '}

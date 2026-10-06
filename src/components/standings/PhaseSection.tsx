@@ -40,8 +40,8 @@ const BRONZE_POSITION = 3;
 function getPhaseLabel(type: PhaseType, didAdvance?: boolean): string {
   if (type === 'regular') return 'Regular Season';
   if (type === 'knockout') {
-    if (didAdvance === false) return 'Playoffs (Did not advance)';
-    return 'Playoffs';
+    if (didAdvance === false) return 'Knockout (Did not advance)';
+    return 'Knockout';
   }
   return '';
 }

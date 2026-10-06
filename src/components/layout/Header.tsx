@@ -60,7 +60,7 @@ export function Header(): React.ReactElement {
   const drawer = (
     <Box sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
-        GPP
+        GPK
       </Typography>
       <List>
         <ListItem disablePadding>
@@ -140,7 +140,7 @@ export function Header(): React.ReactElement {
               fontWeight: 700,
             }}
           >
-            Grand Prix Playoffs
+            Grand Prix Knockout
           </Typography>
 
           {!isMobile && (

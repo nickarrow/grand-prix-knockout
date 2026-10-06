@@ -50,7 +50,7 @@ export function KnockoutExplainer({ compact = false }: KnockoutExplainerProps): 
           }}
         >
           <Info size={14} />
-          What is Grand Prix Playoffs?
+          What is Grand Prix Knockout?
           <ChevronDown size={14} />
         </Link>
       </Box>
@@ -75,8 +75,8 @@ export function KnockoutExplainer({ compact = false }: KnockoutExplainerProps): 
         <Box sx={{ flex: 1, pr: 3 }}>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
             This is an alternative championship using real F1 results. Top {KNOCKOUT_QUALIFIERS}{' '}
-            drivers advance to playoffs, {ELIMINATIONS_PER_ROUND} are eliminated each round, and the
-            final race crowns the GPP Champion.{' '}
+            drivers advance to the knockout, {ELIMINATIONS_PER_ROUND} are eliminated each round, and
+            the final race crowns the Grand Prix Knockout Champion.{' '}
             <Button
               component={RouterLink}
               to="/about"
@@ -113,13 +113,13 @@ export function KnockoutExplainer({ compact = false }: KnockoutExplainerProps): 
         <Info size={20} style={{ flexShrink: 0, marginTop: 2 }} />
         <Box sx={{ flex: 1, pr: 3 }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            What is Grand Prix Playoffs?
+            What is Grand Prix Knockout?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
             An alternative F1 championship format using real race results. The last {KNOCKOUT_RACES}{' '}
-            races become playoffs: top {KNOCKOUT_QUALIFIERS} drivers advance,{' '}
+            races become the knockout: top {KNOCKOUT_QUALIFIERS} drivers advance,{' '}
             {ELIMINATIONS_PER_ROUND} are eliminated each round, and the final race crowns the Grand
-            Prix Playoffs Champion.
+            Prix Knockout Champion.
           </Typography>
           <Button
             component={RouterLink}

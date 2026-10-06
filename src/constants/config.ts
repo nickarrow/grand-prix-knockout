@@ -18,6 +18,6 @@ export const HISTORICAL_SEASONS = [2020, 2021, 2022, 2023, 2024, 2025] as const;
 export const CURRENT_SEASON = 2026;
 
 // App metadata
-export const APP_NAME = 'Grand Prix Playoffs';
+export const APP_NAME = 'Grand Prix Knockout';
 export const APP_DESCRIPTION =
-  'Reimagining the Formula 1 Drivers Championship as a true elimination battle.';
+  'Reimagining the Formula 1 Drivers Championship as a season-long knockout.';

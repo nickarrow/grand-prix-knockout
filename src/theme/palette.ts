@@ -1,4 +1,4 @@
-// Color palette for Grand Prix Playoffs
+// Color palette for Grand Prix Knockout
 // All colors tested for WCAG AA contrast (4.5:1 minimum for text)
 
 // Podium trophy colors - adjusted for better contrast on both light/dark backgrounds
@@ -69,7 +69,7 @@ export const palette = {
     contrastText: '#FFFFFF',
   },
 
-  // Status colors for playoff states
+  // Status colors for knockout states
   success: {
     main: '#00D26A', // Advancing/qualified
     light: '#33DB88',

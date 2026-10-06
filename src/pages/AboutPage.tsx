@@ -17,12 +17,13 @@ export function AboutPage(): React.ReactElement {
     <Container maxWidth="md">
       <Box sx={{ py: { xs: 3, md: 5 } }}>
         <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
-          About Grand Prix Playoffs
+          About Grand Prix Knockout
         </Typography>
 
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.7 }}>
           An independent, fan made, reimagining of the Formula 1 World Drivers' Championship. We
-          take real race results and apply an elimination playoff format.
+          take real race results and apply a season-long knockout, the way F1's own qualifying
+          knocks drivers out session by session.
         </Typography>
 
         {/* Philosophy */}
@@ -41,7 +42,7 @@ export function AboutPage(): React.ReactElement {
         </Typography>
 
         <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.7 }}>
-          Grand Prix Playoffs asks: what if the finale genuinely mattered every single year? This is
+          Grand Prix Knockout asks: what if the finale genuinely mattered every single year? This is
           a parallel universe, not a replacement.
         </Typography>
 
@@ -52,7 +53,7 @@ export function AboutPage(): React.ReactElement {
           The Format
         </Typography>
         <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.7 }}>
-          The last {KNOCKOUT_RACES} races of the season become the playoffs. Everything before is
+          The last {KNOCKOUT_RACES} races of the season become the knockout. Everything before is
           the regular season.
         </Typography>
 
@@ -70,7 +71,7 @@ export function AboutPage(): React.ReactElement {
               Regular Season
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Top {KNOCKOUT_QUALIFIERS} advance to playoffs
+              Top {KNOCKOUT_QUALIFIERS} advance to the knockout
             </Typography>
           </Box>
           <Box
@@ -126,7 +127,7 @@ export function AboutPage(): React.ReactElement {
               Final ({KNOCKOUT_ROUNDS[3].races} race)
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Winner crowned GPP Champion
+              Winner crowned Grand Prix Knockout Champion
             </Typography>
           </Box>
         </Box>
@@ -138,8 +139,8 @@ export function AboutPage(): React.ReactElement {
           Points System
         </Typography>
         <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.7 }}>
-          Standard F1 points are used. Points reset to zero at the start of each playoff round. The
-          site shows both playoff standings and official F1 points side-by-side, so you get both
+          Standard F1 points are used. Points reset to zero at the start of each knockout round. The
+          site shows both knockout standings and official F1 points side-by-side, so you get both
           perspectives.
         </Typography>
 
@@ -195,7 +196,7 @@ export function AboutPage(): React.ReactElement {
             • <strong>9th–10th:</strong> Ranked by Round 1 + Round 2 + Round 3 + Final points
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            • <strong>11th+:</strong> Ranked by Regular Season + all Playoff points
+            • <strong>11th+:</strong> Ranked by Regular Season + all Knockout points
           </Typography>
         </Box>
 
@@ -220,7 +221,7 @@ export function AboutPage(): React.ReactElement {
 
         {/* Disclaimer */}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 4, lineHeight: 1.6 }}>
-          Grand Prix Playoffs is an independent fan project. It is not affiliated with, endorsed by,
+          Grand Prix Knockout is an independent fan project. It is not affiliated with, endorsed by,
           or associated with Formula One Group, the FIA, or Formula 1. All F1-related trademarks
           belong to their respective owners.
         </Typography>
