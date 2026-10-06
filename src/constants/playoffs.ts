@@ -18,6 +18,10 @@ export const RACES_PER_ROUND = 2;
 // Championship final round number
 export const FINAL_ROUND_NUMBER = 4;
 
+// The last elimination round before the final (Round 3). A cancelled final is
+// ranked by this round's points (decision 0005).
+export const LAST_ELIMINATION_ROUND_NUMBER = 3;
+
 // Playoff round configuration
 export const PLAYOFF_ROUNDS = [
   { round: 1, startDrivers: 10, endDrivers: 8, races: 2 },

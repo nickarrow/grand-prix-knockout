@@ -1,6 +1,12 @@
 // Playoff calculation engine
 
-import { PLAYOFF_RACES, PLAYOFF_QUALIFIERS, PLAYOFF_ROUNDS } from 'src/constants';
+import {
+  PLAYOFF_RACES,
+  PLAYOFF_QUALIFIERS,
+  PLAYOFF_ROUNDS,
+  FINAL_ROUND_NUMBER,
+  LAST_ELIMINATION_ROUND_NUMBER,
+} from 'src/constants';
 import type {
   Race,
   RaceCalendar,
@@ -10,6 +16,12 @@ import type {
   SeasonStatus,
 } from 'src/types';
 
+import {
+  playoffRoundStartRace,
+  scheduledSlots,
+  buildRoundDateRanges,
+  playoffRoundForRace,
+} from './playoff-schedule';
 import { extractDrivers, calculateStandings } from './standings';
 
 // Determine season status based on completed races and calendar
@@ -63,17 +75,10 @@ export function getPlayoffRoundRaces(
   playoffRound: number
 ): Race[] {
   const playoffStartRace = totalRaces - PLAYOFF_RACES + 1;
-
-  // Calculate which race numbers belong to this playoff round
-  let raceOffset = 0;
-  for (let i = 0; i < playoffRound - 1; i++) {
-    raceOffset += PLAYOFF_ROUNDS[i]?.races ?? 0;
-  }
-
   const roundConfig = PLAYOFF_ROUNDS[playoffRound - 1];
   if (!roundConfig) return [];
 
-  const startRace = playoffStartRace + raceOffset;
+  const startRace = playoffRoundStartRace(playoffStartRace, playoffRound);
   const endRace = startRace + roundConfig.races - 1;
 
   return races.filter((race) => race.round >= startRace && race.round <= endRace);
@@ -82,33 +87,20 @@ export function getPlayoffRoundRaces(
 // Calculate a single playoff round
 // allQualifiedDrivers: all drivers who qualified for playoffs (for bracket point tracking)
 // activeDrivers: drivers still competing in this round (for elimination decisions)
+// advancingCount: how many active drivers survive the round, the round config's
+//   endDrivers. When an earlier round lost both its races it eliminated nobody, so
+//   more drivers are active here and advancing only endDrivers sends the surplus
+//   out, which keeps the final at four (decision 0005).
 function calculatePlayoffRound(
   playoffRound: number,
   activeDrivers: Driver[],
   allQualifiedDrivers: Driver[],
   roundRaces: Race[],
-  totalRaces: number,
   allSeasonRaces: Race[],
   isComplete: boolean,
+  advancingCount: number,
   regularSeasonOrder?: Map<string, number>
 ): PlayoffRound {
-  const roundConfig = PLAYOFF_ROUNDS[playoffRound - 1];
-  if (!roundConfig) {
-    throw new Error(`Invalid playoff round: ${playoffRound}`);
-  }
-
-  const playoffStartRace = totalRaces - PLAYOFF_RACES + 1;
-
-  // Calculate race numbers for this round
-  let raceOffset = 0;
-  for (let i = 0; i < playoffRound - 1; i++) {
-    raceOffset += PLAYOFF_ROUNDS[i]?.races ?? 0;
-  }
-  const raceNumbers = Array.from(
-    { length: roundConfig.races },
-    (_, i) => playoffStartRace + raceOffset + i
-  );
-
   // Calculate standings for ALL qualified drivers (for bracket point tracking)
   // This allows eliminated drivers to continue accumulating points for bracket ranking
   const allStandings = calculateStandings(
@@ -124,10 +116,8 @@ function calculatePlayoffRound(
   const activeStandings = allStandings.filter((s) => activeDriverIds.has(s.driver.driverId));
 
   // Split the active standings into the drivers who would advance and the drivers
-  // in the drop zone, using the same ordering for both. endDrivers is the number
-  // who survive the round (8, 6, 4, then 1 for the winner-take-all final).
-  const advancingCount = roundConfig.endDrivers;
-
+  // in the drop zone, using the same ordering for both. advancingCount is how many
+  // survive the round.
   const wouldAdvance = activeStandings.slice(0, advancingCount).map((s) => s.driver.driverId);
   const wouldDrop = activeStandings.slice(advancingCount).map((s) => s.driver.driverId);
 
@@ -139,7 +129,7 @@ function calculatePlayoffRound(
 
   return {
     round: playoffRound,
-    raceNumbers,
+    raceNumbers: roundRaces.map((race) => race.round),
     standings: allStandings, // Include all qualified drivers for bracket tracking
     isComplete,
     eliminated,
@@ -218,45 +208,168 @@ export function calculatePlayoffState(
   // Determine season status
   const status = determineSeasonStatus(calendar, completedRaces);
 
+  // Group playoff races that actually RAN into rounds. The backbone is the locked
+  // 2-2-2-1 structure by round number (so a normal calendar is unchanged), with
+  // any added race placed by the date range of the round it falls inside
+  // (decision 0005). A race present in the input but with no classified results is
+  // a race that did not run (an abandoned or cancelled Grand Prix); it is excluded
+  // here but still tells the engine the season reached that slot.
+  const roundDateRanges = buildRoundDateRanges(calendar, playoffStartRace);
+  const racesByRound = new Map<number, Race[]>();
+  // Whether the final's scheduled slot is present in the input but did not run,
+  // which is how a cancelled final is told apart from a final still to come.
+  let finalCancelled = false;
+  for (const race of races) {
+    if (race.round < playoffStartRace) {
+      continue; // regular-season race
+    }
+    const roundNum = playoffRoundForRace(race, playoffStartRace, roundDateRanges);
+    if (roundNum === null) {
+      continue;
+    }
+    if (race.results.length === 0) {
+      // A scheduled race that produced no result did not run.
+      if (roundNum === FINAL_ROUND_NUMBER) {
+        finalCancelled = true;
+      }
+      continue;
+    }
+    const list = racesByRound.get(roundNum) ?? [];
+    list.push(race);
+    racesByRound.set(roundNum, list);
+  }
+
   // Calculate playoff rounds
   const rounds: PlayoffRound[] = [];
   let activeDrivers = [...allQualifiedDrivers]; // Drivers still competing for championship
   let champion: string | null = null;
 
+  // Whether any completed playoff race belongs to a round later than the given one.
+  // The season having moved past a round is how the engine tells a cancelled race
+  // (never run, never coming) from a race that simply has not happened yet
+  // (decision 0005): a round whose successor has run is finished with whatever
+  // races it got.
+  const laterRoundHasRun = (afterRound: number): boolean =>
+    races.some(
+      (race) =>
+        race.round >= playoffStartRace &&
+        race.results.length > 0 &&
+        (playoffRoundForRace(race, playoffStartRace, roundDateRanges) ?? 0) > afterRound
+    );
+
   for (let roundNum = 1; roundNum <= PLAYOFF_ROUNDS.length; roundNum++) {
-    const roundRaces = getPlayoffRoundRaces(races, totalRaces, roundNum);
-
-    // Only calculate if we have races for this round
-    if (roundRaces.length === 0) {
-      break;
-    }
-
     const roundConfig = PLAYOFF_ROUNDS[roundNum - 1];
     if (!roundConfig) break;
 
-    // Check if round is complete
-    const isRoundComplete = roundRaces.length >= roundConfig.races;
+    const roundRaces = racesByRound.get(roundNum) ?? [];
+
+    // A non-final round that ran NONE of its races, with the season already past
+    // it, lost both races (decision 0005). It eliminates nobody, so its drivers
+    // carry into the next round still active. Because that next round advances
+    // only its own endDrivers, the surplus (this round's two eliminations plus the
+    // next round's own two) all go out there, which keeps the final at four. The
+    // rollover is therefore automatic: skip the round without reducing the active
+    // field.
+    if (roundNum !== FINAL_ROUND_NUMBER && roundRaces.length === 0) {
+      if (laterRoundHasRun(roundNum)) {
+        continue;
+      }
+      // Reached a round with no completed races and nothing after it: stop.
+      break;
+    }
+
+    // The championship final.
+    if (roundNum === FINAL_ROUND_NUMBER) {
+      // A cancelled final: the final's scheduled race was reached but did not run
+      // (decision 0005). Rank the four finalists by their Round 3 points under the
+      // 0004 tie order and make the leader champion. A final that is simply still
+      // to come (its race not yet in the input) is left unresolved, so no champion
+      // is crowned early.
+      if (roundRaces.length === 0) {
+        if (!finalCancelled) {
+          break; // final not reached yet
+        }
+        const round3Races = racesByRound.get(LAST_ELIMINATION_ROUND_NUMBER) ?? [];
+        if (round3Races.length === 0) {
+          break; // no Round 3 to rank by
+        }
+        const finalStandings = calculateStandings(
+          allDrivers,
+          round3Races,
+          round3Races,
+          races,
+          regularSeasonOrder
+        );
+        // Rank only the active finalists through the shared comparator, so the
+        // champion is the leader on Round 3 points under the full tie order.
+        const activeIds = new Set(activeDrivers.map((d) => d.driverId));
+        const finalistRanking = finalStandings
+          .filter((s) => activeIds.has(s.driver.driverId))
+          .map((s) => s.driver.driverId);
+        rounds.push({
+          round: roundNum,
+          raceNumbers: round3Races.map((race) => race.round),
+          standings: finalStandings,
+          isComplete: true,
+          eliminated: finalistRanking.slice(1),
+          advancing: finalistRanking.slice(0, 1),
+          atRisk: [],
+        });
+        champion = finalistRanking[0] ?? null;
+        break;
+      }
+
+      // A final that ran decides the champion as before.
+      const round = calculatePlayoffRound(
+        roundNum,
+        activeDrivers,
+        allDrivers,
+        roundRaces,
+        races,
+        true,
+        roundConfig.endDrivers,
+        regularSeasonOrder
+      );
+      rounds.push(round);
+      if (round.advancing.length > 0) {
+        champion = round.advancing[0] ?? null;
+      }
+      break;
+    }
+
+    // An elimination round (1-3) is complete when it has run every race it is
+    // going to. That is true once it has all its scheduled slots, OR once the
+    // season has moved on to a later round, which means any missing race was
+    // cancelled and the round is decided on the race that ran (decision 0005). A
+    // two-race round with one race run and nothing after it stays incomplete and
+    // reports its drop zone (decision 0003).
+    const isRoundComplete =
+      roundRaces.length > 0 &&
+      (roundRaces.length >= scheduledSlots(roundNum) || laterRoundHasRun(roundNum));
+
+    // Drivers who survive the round: the round's own endDrivers. When an earlier
+    // round lost both its races and was skipped, the extra drivers it did not
+    // eliminate are still active here, so advancing only endDrivers sends the
+    // surplus out this round and keeps the final at four (decision 0005).
+    const advancingCount = roundConfig.endDrivers;
 
     const round = calculatePlayoffRound(
       roundNum,
       activeDrivers,
-      allDrivers, // Pass ALL drivers for bracket point tracking (including non-qualifiers)
+      allDrivers,
       roundRaces,
-      totalRaces,
       races,
       isRoundComplete,
+      advancingCount,
       regularSeasonOrder
     );
     rounds.push(round);
 
-    // If round is complete, update active drivers for next round
     if (isRoundComplete) {
       activeDrivers = activeDrivers.filter((d) => round.advancing.includes(d.driverId));
-
-      // Check for champion (final round complete)
-      if (roundNum === PLAYOFF_ROUNDS.length && round.advancing.length > 0) {
-        champion = round.advancing[0] ?? null;
-      }
+    } else {
+      // An incomplete round decides nothing yet, so stop here.
+      break;
     }
   }
 
