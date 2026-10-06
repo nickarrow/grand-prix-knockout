@@ -1,6 +1,6 @@
-# Contributing to Grand Prix Playoffs
+# Contributing to Grand Prix Knockout
 
-Thank you for your interest in contributing to Grand Prix Playoffs! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Grand Prix Knockout! This document provides guidelines and instructions for contributing.
 
 ## Getting Started
 
@@ -45,11 +45,11 @@ Please follow `AGENTS.md` and the development standards in `.kiro/skills/codebas
 
 ## Testing
 
-The test suite has 50 unit tests covering:
+The test suite has 102 unit tests covering:
 
 - Points calculation (official race and sprint points from the API, with no pole-position bonus)
 - Standings and tiebreaker logic
-- Playoff elimination mechanics
+- Knockout elimination mechanics
 - Season status detection
 - Edge cases (ties, DNFs, incomplete seasons)
 
@@ -72,7 +72,7 @@ We use conventional commits:
 ```
 type(scope): description
 
-feat(engine): add playoff elimination logic
+feat(engine): add knockout elimination logic
 fix(api): handle rate limit errors
 docs(readme): update installation instructions
 ```

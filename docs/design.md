@@ -1,4 +1,4 @@
-# Grand Prix Playoffs: design
+# Grand Prix Knockout: design
 
 Revised 2026-10-05. Decision records: `docs/decisions/`. Order of work: `docs/delivery-plan.md`.
 
@@ -10,7 +10,7 @@ Revised 2026-10-05. Decision records: `docs/decisions/`. Order of work: `docs/de
 
 ## What it is, and why
 
-Grand Prix Playoffs takes the official results of every Formula 1 Grand Prix and sprint and runs them through an
+Grand Prix Knockout takes the official results of every Formula 1 Grand Prix and sprint and runs them through an
 elimination format. The regular season's top ten go into the last seven races of the calendar, the field is cut in three
 rounds, and the four who are left settle the title in the final race.
 
@@ -273,9 +273,10 @@ The first four came from the February list of future considerations and are carr
 
 ## Open questions
 
-All undecided.
-
 ### 1. Name and vocabulary
+
+Decided. The name is Grand Prix Knockout, and the vocabulary moves from playoff to knockout. See
+`docs/decisions/0008-name-grand-prix-knockout.md`. The context below is kept as the evidence behind that decision.
 
 The owner's direction on 2026-10-05: drop "Playoffs" and the NASCAR comparison, and lean on F1 qualifying instead.
 NASCAR itself closed its elimination era and its one-race championship for 2026 and went back to a ten-race points Chase

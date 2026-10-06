@@ -1,14 +1,16 @@
-# Grand Prix Playoffs
+# Grand Prix Knockout
 
 > Reimagining the Formula 1 Drivers' Championship as a true elimination battle.
 
+<!-- Domain flip pending the external-rename stage: this moves to grandprixknockout.com once the owner sets up the domain and the redirect. See docs/decisions/0008. -->
+
 **Live at [grandprixplayoffs.com](https://grandprixplayoffs.com)**
 
-Grand Prix Playoffs is an independent, fan-made web application that restructures the F1 World Drivers' Championship into a playoff format. Using official Grand Prix results, the season culminates in a winner-take-all final race among four drivers.
+Grand Prix Knockout is an independent, fan-made web application that restructures the F1 World Drivers' Championship into a knockout format. Using official Grand Prix results, the season culminates in a winner-take-all final race among four drivers.
 
 ## How It Works
 
-The last 7 races of the F1 season become a playoff:
+The last 7 races of the F1 season become a knockout:
 
 | Phase          | Races           | Drivers | Outcome             |
 | -------------- | --------------- | ------- | ------------------- |
@@ -18,11 +20,11 @@ The last 7 races of the F1 season become a playoff:
 | Round 3        | 2 races         | 6 → 4   | Bottom 2 eliminated |
 | Final          | 1 race          | 4       | Winner takes title  |
 
-Points reset at the start of each playoff round. Each season's official F1 points apply as awarded: race and sprint points, plus the fastest-lap point in the seasons that had one. There is no pole-position point.
+Points reset at the start of each knockout round. Each season's official F1 points apply as awarded: race and sprint points, plus the fastest-lap point in the seasons that had one. There is no pole-position point.
 
 ## Features
 
-- **Playoff Standings**: See who's advancing, eliminated, or crowned champion
+- **Knockout Standings**: See who's advancing, eliminated, or crowned champion
 - **Instant Loads**: Pre-cached race data for fast performance
 - **Live Updates**: GitHub Actions refreshes data weekly during active seasons
 - **Mobile-First**: Responsive design for all devices
@@ -46,7 +48,7 @@ npm install
 # Start development server
 npm run dev
 
-# Run tests (50 tests covering the playoff engine and its helpers)
+# Run tests (102 tests across 7 files, covering the knockout engine and its helpers)
 npm test
 
 # Build for production
@@ -62,12 +64,12 @@ npm run update-data
 src/
 ├── components/     # UI components (standings, layout)
 ├── pages/          # Route pages (Home, Season, About)
-├── engine/         # Playoff calculation logic
+├── engine/         # Knockout calculation logic
 ├── services/       # API clients + static data loader
 ├── hooks/          # Custom React hooks
 ├── store/          # Zustand state (theme)
 ├── theme/          # MUI theme + color palette
-├── constants/      # Points, playoffs, config
+├── constants/      # Points, knockout, config
 └── types/          # TypeScript interfaces
 data/
 ├── 2020.json       # Cached 2020 season data
@@ -85,4 +87,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
-Grand Prix Playoffs is an independent fan project and is not affiliated with, endorsed by, or associated with Formula One Group, the FIA, or Formula 1.
+Grand Prix Knockout is an independent fan project and is not affiliated with, endorsed by, or associated with Formula One Group, the FIA, or Formula 1.

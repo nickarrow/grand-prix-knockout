@@ -8,6 +8,36 @@ Changes before 2026.10.05 are in the git log.
 
 ## Unreleased
 
+Increment 4: the deep rename. On the `increment-4-deep-rename` branch, awaiting the owner's local review and merge. This
+is a name change, not a behaviour change. No computed outcome moved: `src/engine/golden.test.ts` is 7 of 7 and the suite
+stays at 102 tests across 7 files.
+
+### Changed
+
+- The product is now Grand Prix Knockout. The name and the user-facing copy move from playoff to knockout, keeping the
+  decision-0003 "drop zone" and "knocked out" wording.
+- The internal vocabulary moves from playoff to knockout throughout the code: the engine types, functions, hooks, files
+  and constants. The `gpp-theme` and `gpp-explainer-collapsed` localStorage keys were kept, so a returning visitor keeps
+  their theme and collapsed-explainer state.
+- `docs/design.md` open question 1 is marked decided, pointing at the new decision record.
+
+### Added
+
+- `docs/decisions/0008-name-grand-prix-knockout.md`, recording the name, the vocabulary move, the alternatives
+  considered, and the deferred external rename.
+
+### Removed
+
+- The NASCAR reference in the `index.html` meta tags and the copy. The old description called the format
+  "NASCAR-style playoffs"; NASCAR closed that format for 2026, so the comparison is gone.
+
+The external rename is deferred to a separate owner-run stage: the domain grandprixknockout.com with a redirect from
+grandprixplayoffs.com, the GitHub repository rename, and the Cloudflare project rename. Until it runs, the
+`package.json` name, the `github.com/nickarrow/grand-prix-playoffs` URLs, the grandprixplayoffs.com URLs and the
+Cloudflare project name stay as they are.
+
+---
+
 Increment 3: cleanup. On the `increment-3-cleanup` branch, awaiting the owner's local review and merge. No playoff
 outcome changed and `src/engine/golden.test.ts` is byte-for-byte unchanged (7 of 7). The suite stays at 102 tests across
 7 files.
