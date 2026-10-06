@@ -4,11 +4,12 @@ import { useMemo } from 'react';
 
 import { useSeasonData } from 'src/services';
 import { calculatePlayoffState } from 'src/engine';
-import type { PlayoffState, Race } from 'src/types';
+import type { PlayoffState, Race, RaceCalendar } from 'src/types';
 
 interface UsePlayoffDataResult {
   playoffState: PlayoffState | null;
   races: Race[];
+  calendar: RaceCalendar[];
   isLoading: boolean;
   error: Error | null;
 }
@@ -26,6 +27,7 @@ export function usePlayoffData(year: number): UsePlayoffDataResult {
   return {
     playoffState,
     races: races ?? [],
+    calendar: calendar ?? [],
     isLoading,
     error,
   };

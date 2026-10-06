@@ -14,6 +14,29 @@ export function getEliminationRound(driverId: string, playoffState: PlayoffState
   return 0; // Made it to final or still advancing
 }
 
+// Whether the regular season is over, so playoff banners (including the
+// "Did Not Advance" banner for non-qualifiers) should show. Keyed off season
+// status rather than the presence of a round object, because a round now exists
+// mid-run with no eliminations yet.
+export function isRegularSeasonComplete(playoffState: PlayoffState): boolean {
+  return playoffState.status === 'playoffs' || playoffState.status === 'completed';
+}
+
+// The playoff round currently in progress: one that has races but is not yet
+// complete. Returns undefined when no round is mid-run (regular season, between
+// rounds, or season complete).
+export function getInProgressRound(playoffState: PlayoffState): PlayoffRound | undefined {
+  return playoffState.rounds.find((round) => !round.isComplete);
+}
+
+// Whether a driver sits in the drop zone of the round in progress. A driver is
+// at risk only while a round is incomplete; once it completes they are either
+// eliminated or advancing, never at risk.
+export function isDriverAtRisk(driverId: string, playoffState: PlayoffState): boolean {
+  const round = getInProgressRound(playoffState);
+  return round?.atRisk.includes(driverId) ?? false;
+}
+
 // Get points for a driver in a specific playoff round
 export function getPlayoffRoundPoints(
   round: PlayoffRound | undefined,

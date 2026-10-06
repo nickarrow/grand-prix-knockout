@@ -30,3 +30,4 @@ export const POLE_POSITION = 1;
 // UI Constants
 export const TROPHY_ICON_SIZE = 17;
 export const TROPHY_ICON_SIZE_LARGE = 18;
+export const DROP_ZONE_ICON_SIZE = 16;

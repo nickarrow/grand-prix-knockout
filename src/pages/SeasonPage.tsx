@@ -6,16 +6,22 @@ import { useParams } from 'react-router-dom';
 import { usePlayoffData } from 'src/hooks';
 import { StandingsTable } from 'src/components/standings';
 import { PlayoffExplainer } from 'src/components/common';
-import { TROPHY_ICON_SIZE_LARGE, getTeamColor } from 'src/constants';
+import {
+  TROPHY_ICON_SIZE_LARGE,
+  FINAL_ROUND_NUMBER,
+  DEFAULT_SEASON,
+  getTeamColor,
+} from 'src/constants';
 import { PODIUM_COLORS } from 'src/theme/palette';
 
 export function SeasonPage(): React.ReactElement {
   const { year } = useParams<{ year: string }>();
-  const seasonYear = parseInt(year ?? '2025', 10);
+  const parsedYear = Number.parseInt(year ?? '', 10);
+  const seasonYear = Number.isNaN(parsedYear) ? DEFAULT_SEASON : parsedYear;
   const theme = useTheme();
   const mode = theme.palette.mode;
 
-  const { playoffState, races, isLoading, error } = usePlayoffData(seasonYear);
+  const { playoffState, races, calendar, isLoading, error } = usePlayoffData(seasonYear);
 
   if (isLoading) {
     return (
@@ -56,11 +62,17 @@ export function SeasonPage(): React.ReactElement {
     );
   }
 
-  // Build status text based on season state
+  // Name of the race that opens the playoffs (first playoff round number).
+  const playoffOpenerName = (): string => {
+    const opener = calendar.find((entry) => entry.round === playoffState.playoffStartRace);
+    return opener?.raceName ?? `Race ${playoffState.playoffStartRace}`;
+  };
+
+  // Build status text based on season state. Mirrors the status-line target in
+  // docs/design.md.
   const getStatusText = (): string => {
-    const { status, totalRaces, playoffStartRace, rounds } = playoffState;
+    const { status, totalRaces, regularSeasonRaces, rounds } = playoffState;
     const completedRaces = races.length;
-    const racesUntilPlayoffs = playoffStartRace - completedRaces - 1;
 
     if (status === 'completed') {
       return `✓ Season Complete • ${totalRaces} races`;
@@ -71,19 +83,33 @@ export function SeasonPage(): React.ReactElement {
     }
 
     if (status === 'regular-season') {
-      if (racesUntilPlayoffs === 1) {
-        return `Race ${completedRaces} of ${totalRaces} • Playoffs begin next race`;
+      const racesLeft = regularSeasonRaces - completedRaces;
+      // The last regular-season race has run, but no playoff race yet: say the
+      // regular season is complete and name the race that opens the playoffs.
+      if (racesLeft <= 0) {
+        return `Regular season complete • Playoffs open at ${playoffOpenerName()}`;
       }
-      return `Race ${completedRaces} of ${totalRaces} • ${racesUntilPlayoffs} races until playoffs`;
+      if (racesLeft === 1) {
+        return `Race ${completedRaces} of ${totalRaces} • 1 regular-season race left`;
+      }
+      return `Race ${completedRaces} of ${totalRaces} • ${racesLeft} regular-season races left`;
     }
 
-    // Playoffs - figure out which round
-    const currentRound = rounds.find((r) => r.raceNumbers.some((rn) => rn > completedRaces));
-    if (currentRound) {
-      if (currentRound.round === 4) {
+    // Find the round in progress (has a race still to come at or after the next race).
+    const inProgressRound = rounds.find((r) => !r.isComplete);
+    if (inProgressRound) {
+      if (inProgressRound.round === FINAL_ROUND_NUMBER) {
         return `Championship Final • Race ${completedRaces} of ${totalRaces}`;
       }
-      return `Playoff Round ${currentRound.round} • Race ${completedRaces} of ${totalRaces}`;
+      return `Playoff Round ${inProgressRound.round} • Race ${completedRaces} of ${totalRaces}`;
+    }
+
+    // No round in progress but in the playoffs: we are between completed rounds.
+    const lastComplete = [...rounds].reverse().find((r) => r.isComplete);
+    if (lastComplete && lastComplete.round < FINAL_ROUND_NUMBER) {
+      const nextRound = lastComplete.round + 1;
+      const nextLabel = nextRound === FINAL_ROUND_NUMBER ? 'the Final' : `Round ${nextRound}`;
+      return `Round ${lastComplete.round} complete • ${nextLabel} next • Race ${completedRaces} of ${totalRaces}`;
     }
 
     return `Playoffs • Race ${completedRaces} of ${totalRaces}`;

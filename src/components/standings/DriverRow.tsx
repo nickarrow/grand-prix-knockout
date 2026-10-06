@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Box, Collapse, TableCell, TableRow, Typography } from '@mui/material';
+import { Box, Chip, Collapse, TableCell, TableRow, Typography } from '@mui/material';
 import { ChevronRight } from 'lucide-react';
 
 import { useTheme } from '@mui/material/styles';
@@ -10,7 +10,12 @@ import { useTheme } from '@mui/material/styles';
 import type { Driver, PlayoffState, Race } from 'src/types';
 import { getTeamColor } from 'src/constants';
 import { ELIMINATION_COLOR } from 'src/theme/palette';
-import { getPlayoffRoundPoints, getEliminationRound, advancedViaTiebreaker } from 'src/utils';
+import {
+  getPlayoffRoundPoints,
+  getEliminationRound,
+  advancedViaTiebreaker,
+  isDriverAtRisk,
+} from 'src/utils';
 
 import { DriverDetail } from './DriverDetail';
 
@@ -47,6 +52,10 @@ export function DriverRow({
 
   // Get elimination round for this driver (-1 = didn't qualify, 0 = finalist, 1-3 = eliminated in that round)
   const elimRound = getEliminationRound(driver.driverId, playoffState);
+
+  // Whether this driver is in the drop zone of the round in progress. Shown as a
+  // text chip so the state is readable without colour and without expanding the row.
+  const atRisk = isDriverAtRisk(driver.driverId, playoffState);
 
   const round1 = rounds.find((r) => r.round === 1);
   const round2 = rounds.find((r) => r.round === 2);
@@ -196,6 +205,21 @@ export function DriverRow({
             >
               {driver.firstName} {driver.lastName}
             </Typography>
+            {atRisk && (
+              <Chip
+                label="Drop zone"
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  bgcolor: 'warning.main',
+                  color: 'secondary.contrastText',
+                  flexShrink: 0,
+                  '& .MuiChip-label': { px: 0.75 },
+                }}
+              />
+            )}
             <ChevronRight
               size={CHEVRON_ICON_SIZE}
               style={{

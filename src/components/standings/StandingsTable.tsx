@@ -1,6 +1,7 @@
 // Main standings table component
 
 import {
+  Box,
   Paper,
   Table,
   TableBody,
@@ -12,9 +13,10 @@ import {
 } from '@mui/material';
 
 import type { PlayoffState, Race, DriverStanding } from 'src/types';
-import { getEliminationRound, getBracketPoints } from 'src/utils';
+import { getEliminationRound, getBracketPoints, isRegularSeasonComplete } from 'src/utils';
 
 import { DriverRow } from './DriverRow';
+import { DropZoneNotice } from './DropZoneNotice';
 
 const F1_COLUMN_WIDTH = 40;
 
@@ -70,20 +72,13 @@ interface DriverGroup {
   type: GroupType;
 }
 
-// Check if a playoff round is complete (all races in that round have been run)
+// Check if a playoff round is complete (every race the round covers has run).
+// Reads the engine's signal rather than inferring from the eliminated list, so a
+// round that is in progress (eliminated empty, drop zone reported separately) is
+// correctly treated as incomplete.
 function isRoundComplete(playoffState: PlayoffState, roundNum: number): boolean {
   const round = playoffState.rounds.find((r) => r.round === roundNum);
-  if (!round) return false;
-
-  // A round is complete if it exists and has eliminated drivers
-  // (the engine only populates eliminated array when round is complete)
-  return round.eliminated.length > 0;
-}
-
-// Check if regular season is complete
-function isRegularSeasonComplete(playoffState: PlayoffState): boolean {
-  // Regular season is complete if we have any playoff rounds or season is done
-  return playoffState.rounds.length > 0 || playoffState.status === 'completed';
+  return round?.isComplete ?? false;
 }
 
 function groupDriversByElimination(
@@ -228,107 +223,112 @@ export function StandingsTable({
   let runningPosition = 0;
 
   return (
-    <TableContainer
-      component={Paper}
-      sx={{
-        overflowX: 'auto',
-        maxWidth: { md: 700, lg: 800 },
-        mx: 'auto',
-      }}
-    >
-      <Table size="small" aria-label="Playoff standings">
-        <TableHead>
-          <TableRow sx={{ bgcolor: 'action.hover' }}>
-            <TableCell sx={{ width: 36, p: 1 }} align="right">
-              <Typography variant="caption" fontWeight={600}>
-                Pos
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ p: 1 }}>
-              <Typography variant="caption" fontWeight={600}>
-                Driver
-              </Typography>
-            </TableCell>
-            <TableCell align="right" sx={{ p: 1 }}>
-              <Typography variant="caption" fontWeight={600}>
-                Reg
-              </Typography>
-            </TableCell>
-            <TableCell align="right" sx={{ p: 1 }}>
-              <Typography variant="caption" fontWeight={600}>
-                R1
-              </Typography>
-            </TableCell>
-            <TableCell align="right" sx={{ p: 1 }}>
-              <Typography variant="caption" fontWeight={600}>
-                R2
-              </Typography>
-            </TableCell>
-            <TableCell align="right" sx={{ p: 1 }}>
-              <Typography variant="caption" fontWeight={600}>
-                R3
-              </Typography>
-            </TableCell>
-            <TableCell align="center" sx={{ p: 1 }}>
-              <Typography variant="caption" fontWeight={600}>
-                Final
-              </Typography>
-            </TableCell>
-            <TableCell
-              align="center"
-              sx={{
-                py: 1,
-                px: 0.25,
-                borderLeft: 3,
-                borderColor: 'divider',
-                width: F1_COLUMN_WIDTH,
-                minWidth: F1_COLUMN_WIDTH,
-                maxWidth: F1_COLUMN_WIDTH,
-              }}
-            >
-              <Typography
-                variant="caption"
-                fontWeight={600}
-                color="text.secondary"
-                sx={{ lineHeight: 1.1, display: 'block' }}
+    <Box sx={{ maxWidth: { md: 700, lg: 800 }, mx: 'auto' }}>
+      <DropZoneNotice playoffState={playoffState} completedRaces={allRaces.length} />
+      <TableContainer
+        component={Paper}
+        sx={{
+          overflowX: 'auto',
+        }}
+      >
+        <Table size="small" aria-label="Playoff standings">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell sx={{ width: 36, p: 1 }} align="right">
+                <Typography variant="caption" fontWeight={600}>
+                  Pos
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ p: 1 }}>
+                <Typography variant="caption" fontWeight={600}>
+                  Driver
+                </Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ p: 1 }}>
+                <Typography variant="caption" fontWeight={600}>
+                  Reg
+                </Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ p: 1 }}>
+                <Typography variant="caption" fontWeight={600}>
+                  R1
+                </Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ p: 1 }}>
+                <Typography variant="caption" fontWeight={600}>
+                  R2
+                </Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ p: 1 }}>
+                <Typography variant="caption" fontWeight={600}>
+                  R3
+                </Typography>
+              </TableCell>
+              <TableCell align="center" sx={{ p: 1 }}>
+                <Typography variant="caption" fontWeight={600}>
+                  Final
+                </Typography>
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{
+                  py: 1,
+                  px: 0.25,
+                  borderLeft: 3,
+                  borderColor: 'divider',
+                  width: F1_COLUMN_WIDTH,
+                  minWidth: F1_COLUMN_WIDTH,
+                  maxWidth: F1_COLUMN_WIDTH,
+                }}
               >
-                F1
-                <br />
-                Ofcl
-              </Typography>
-            </TableCell>
-          </TableRow>
-        </TableHead>
+                <Typography
+                  variant="caption"
+                  fontWeight={600}
+                  color="text.secondary"
+                  sx={{ lineHeight: 1.1, display: 'block' }}
+                >
+                  F1
+                  <br />
+                  Ofcl
+                </Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
 
-        <TableBody>
-          {groups.map((group) => {
-            const rows = group.drivers.map((standing) => {
-              runningPosition++;
-              return (
-                <DriverRow
-                  key={standing.driver.driverId}
-                  driver={standing.driver}
-                  position={runningPosition}
-                  regularSeasonPoints={standing.points}
-                  officialPoints={standing.officialPoints}
-                  playoffState={playoffState}
-                  allRaces={allRaces}
-                />
-              );
-            });
+          <TableBody>
+            {groups.map((group) => {
+              const rows = group.drivers.map((standing) => {
+                runningPosition++;
+                return (
+                  <DriverRow
+                    key={standing.driver.driverId}
+                    driver={standing.driver}
+                    position={runningPosition}
+                    regularSeasonPoints={standing.points}
+                    officialPoints={standing.officialPoints}
+                    playoffState={playoffState}
+                    allRaces={allRaces}
+                  />
+                );
+              });
 
-            // Skip banner for finalists (empty label)
-            if (!group.label) {
-              return rows;
-            }
+              // Skip banner for finalists (empty label)
+              if (!group.label) {
+                return rows;
+              }
 
-            return [
-              <SectionBanner key={`banner-${group.label}`} label={group.label} type={group.type} />,
-              ...rows,
-            ];
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+              return [
+                <SectionBanner
+                  key={`banner-${group.label}`}
+                  label={group.label}
+                  type={group.type}
+                />,
+                ...rows,
+              ];
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }
