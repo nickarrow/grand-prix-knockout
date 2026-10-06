@@ -1,6 +1,7 @@
 import { Box, Container, Typography, Divider, Link } from '@mui/material';
 import { ExternalLink, Github } from 'lucide-react';
 
+import { TiebreakerExplainer } from 'src/components/common';
 import {
   PLAYOFF_RACES,
   PLAYOFF_QUALIFIERS,
@@ -167,13 +168,7 @@ export function AboutPage(): React.ReactElement {
         <Divider sx={{ my: 4 }} />
 
         {/* Tiebreakers */}
-        <Typography variant="h5" component="h2" fontWeight={600} gutterBottom>
-          Tiebreakers
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.7 }}>
-          If drivers are tied on points at the end of a round, the standard F1 countback applies:
-          most wins, then most 2nd places, then most 3rd places, and so on.
-        </Typography>
+        <TiebreakerExplainer />
 
         <Divider sx={{ my: 4 }} />
 
