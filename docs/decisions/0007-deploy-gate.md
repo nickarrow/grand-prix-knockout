@@ -1,9 +1,11 @@
 # 0007. Deploy from GitHub Actions behind the checks
 
-Date: 2026-10-06. Recommended by the orchestrator in increment 3. Awaiting the owner's merge and the one owner action
-below.
+Date: 2026-10-06. Recommended by the orchestrator in increment 3, accepted and armed by the owner on 2026-10-07.
 
-Status: Proposed. Supersedes nothing. It answers open question 2 in `docs/design.md`.
+Status: Accepted and live. On 2026-10-07 the owner created a Pages-scoped Cloudflare API token, stored it with the
+account id as the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, and disabled Cloudflare's automatic
+deployments for the production branch, so `deploy.yml` is now the only path to production. Supersedes nothing. It answers
+open question 2 in `docs/design.md`.
 
 ## Context
 
