@@ -1,10 +1,10 @@
 # Delivery plan
 
 - [x] Increment 0: adopt the practice and write it down
-- [ ] Increment 1: ready for Singapore, merged before Monday 2026-10-12 06:00 UTC
-- [ ] Increment 2: rules you can defend, shipped before Monday 2026-10-26 06:00 UTC
+- [x] Increment 1: ready for Singapore, merged and deployed before Monday 2026-10-12 06:00 UTC
+- [x] Increment 2: rules you can defend, shipped before Monday 2026-10-26 06:00 UTC
 - [x] Increment 3: cleanup
-- [ ] Increment 4: rename and relaunch, timed for the Final on 2026-12-06
+- [x] Increment 4: rename and relaunch (structural work done 2026-10-07; the relaunch announcement is the owner's, timed for the Final on 2026-12-06)
 
 What is being built and why is in `docs/design.md`. Choices made along the way are in `docs/decisions/`.
 
@@ -303,6 +303,25 @@ deterministic without touching a completed season, so the golden tests stay unch
   of the script from your machine as on 5 October, or both. That the 429s come from the hourly allowance shared on
   GitHub's runner addresses is inferred (`docs/design.md`, "Data").
 
+### Done, 2026-10-06
+
+Shipped on the branch `increment-1-singapore`, merged to `main` locally (merge `991e0eb`) and deployed. Thirteen commits:
+the golden regression suite first, the engine drop zone (no mid-round elimination; at-risk reported separately per
+`0003`), the 2026 regular-season tiebreak key, the standings display and the fixed status line, the paged data pipeline
+with retries and validation, the branch-check workflow on Node 24, and the 2026 refresh to 16 races. The owner approved
+the drop-zone wording and it was tweaked to "are knocked out" (`991e0eb`), the custom `User-Agent` was added, and a
+second Monday data run was added as the 429 fallback.
+
+Observed: 83 tests passing across 7 files (up from 50), lint clean, Prettier clean, build clean. Two blocking review
+findings were fixed before merge: the drop-zone warning text failed WCAG AA contrast (now 9.6:1), and the data-failure
+issue label did not exist (now self-provisioning). The two-model review returned APPROVED.
+
+Proven in production on 2026-10-06. A manual dispatch of the data workflow first failed at the commit step because
+Husky's lint-staged tripped its empty-commit guard in CI; fixed by skipping the hooks on the bot commit (`HUSKY=0` plus
+`git commit --no-verify`, merge `4c21670`). A second dispatch ran green through fetch, validate, test, build and commit,
+so the 429 fix and the whole pipeline are confirmed on GitHub's runners. The paged fetch cut a full-season run from
+about 70 requests to about 15.
+
 ## Increment 2: rules you can defend
 
 Shipped before the data run on Monday 2026-10-26 at 06:00 UTC. It follows the United States Grand Prix on 25 October,
@@ -574,9 +593,45 @@ data-fetch User-Agent, the `grandprixplayoffs.com` URLs in `index.html`, the Clo
 rename the repository, the domain, the Cloudflare project and anything that would strand stored data or break a live
 URL, so they belong with the owner's registrar and Cloudflare access, not in this branch.
 
-Still unverified. Nothing runs the tests before a merge to `main` deploys, so the live relaunch is only as green as this
-run. The external set above is unverified by definition until the owner runs it. The branch is not pushed and not
-merged; the owner reviews it in the editor and merges locally.
+Still unverified at the time of that run. Nothing ran the tests before a merge to `main` deployed, the external set
+above was unverified until the owner ran it, and the branch was not yet merged. The next entry resolves all of these.
+
+### Done, 2026-10-07: the gate armed and the external rename
+
+The structural work of increment 4 is complete and live. Only the relaunch announcement remains, which is the owner's,
+timed for the Final on 2026-12-06.
+
+The deploy gate (`0007`) was armed. The owner created a Pages-scoped Cloudflare API token, stored it with the account
+id as the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, and disabled Cloudflare's automatic
+deployments for `main`, so `deploy.yml` is now the only path to production: a push runs `npm ci`, lint, the tests and
+the build, and only a clean run uploads `dist/` to Cloudflare with Wrangler. Four gated deploys ran green on 2026-10-07.
+The pre-arming run on 2026-10-06 had correctly failed at the upload step for want of the secrets, which proved the gate
+was inert until armed. `0007` is marked Accepted and live.
+
+The deep rename was merged. The `increment-4-deep-rename` branch was rebased onto the gate commit and fast-forwarded to
+`main`, and the gate deployed Grand Prix Knockout. The site at the old domain showed the new brand with no "playoff" or
+"NASCAR" text, and 2020 rendered Verstappen as champion, confirming the engine was unchanged by the rename.
+
+The external rename was completed by the owner with the orchestrator. The GitHub repository was renamed to
+`grand-prix-knockout` and the local remote updated to match; `grandprixknockout.com` was registered and attached to the
+Pages project as a custom domain. The deferred code references were then updated in one commit (merge `fafdbcc`): the
+`package.json` name, the GitHub URLs in the Footer and the About page, the data-fetch `User-Agent`, the `README`
+"Live at" line, and the Open Graph and Twitter URLs. The lockfile was resynced to the new name. The Cloudflare project
+kept its internal `grand-prix-playoffs` name on purpose, invisible to users and risky to recreate, so `wrangler.toml`
+and `deploy.yml` still name it. The `gpp-theme` and `gpp-explainer-collapsed` localStorage keys were kept so returning
+visitors do not lose their theme and collapsed-explainer state.
+
+The old domain now redirects. `grandprixplayoffs.com` was removed as a Pages custom domain and set up as a redirect-only
+zone: a proxied `AAAA` black-hole record (`100::`) for the apex and `www`, and a 301 Redirect Rule to
+`https://grandprixknockout.com/${2}` that preserves the path. Verified from the orchestrator: the apex, a deep path
+(`/2026`, `/2020`) and `www` all return a 301 to the matching path on the new domain, and following the redirect lands
+on a working page (HTTP 200, title "Grand Prix Knockout").
+
+Observed on the merged `main`: 102 tests across 7 files, the golden suite 7 of 7 unchanged, lint clean, Prettier clean,
+build clean. No playoff outcome moved through any of this. The relaunch announcement is the one remaining item.
+
+A small follow-up noted, not blocking: the `cloudflare/wrangler-action@v3` deploy step prints a cosmetic Node 20
+deprecation warning; pin or update it when convenient.
 
 [gh-token]: https://docs.github.com/en/actions/concepts/security/github_token
 [ubuntu26]: https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration/

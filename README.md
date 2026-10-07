@@ -1,6 +1,6 @@
 # Grand Prix Knockout
 
-> Reimagining the Formula 1 Drivers' Championship as a true elimination battle.
+> Reimagining the Formula 1 Drivers' Championship as a season-long knockout, inspired by F1's own knockout qualifying.
 
 **Live at [grandprixknockout.com](https://grandprixknockout.com)**
 

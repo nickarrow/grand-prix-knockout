@@ -1,40 +1,43 @@
 # Changelog
 
-Notable changes to Grand Prix Playoffs, newest first. The format follows
+Notable changes to Grand Prix Knockout, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions are dates rather than semantic versions, because the site
 is not a library anybody depends on.
 
-Changes before 2026.10.05 are in the git log.
+The project was named Grand Prix Playoffs until the 2026.10.07 rename below. Changes before 2026.10.05 are in the git
+log.
 
-## Unreleased
+## 2026.10.07
 
-Increment 4: the deep rename. On the `increment-4-deep-rename` branch, awaiting the owner's local review and merge. This
-is a name change, not a behaviour change. No computed outcome moved: `src/engine/golden.test.ts` is 7 of 7 and the suite
-stays at 102 tests across 7 files.
+Increment 4, shipped and live. The product is renamed to Grand Prix Knockout, a deploy gate now stands between a commit
+and production, and the new domain is live. A name and infrastructure change, not a behaviour change: no computed
+outcome moved, `src/engine/golden.test.ts` is 7 of 7 and the suite stays at 102 tests across 7 files. The relaunch
+announcement, timed for the Final on 2026-12-06, is the only remaining item.
 
 ### Changed
 
-- The product is now Grand Prix Knockout. The name and the user-facing copy move from playoff to knockout, keeping the
+- The product is now Grand Prix Knockout. The name and the user-facing copy moved from playoff to knockout, keeping the
   decision-0003 "drop zone" and "knocked out" wording.
-- The internal vocabulary moves from playoff to knockout throughout the code: the engine types, functions, hooks, files
+- The internal vocabulary moved from playoff to knockout throughout the code: the engine types, functions, hooks, files
   and constants. The `gpp-theme` and `gpp-explainer-collapsed` localStorage keys were kept, so a returning visitor keeps
   their theme and collapsed-explainer state.
-- `docs/design.md` open question 1 is marked decided, pointing at the new decision record.
+- The live site is now at grandprixknockout.com. grandprixplayoffs.com 301-redirects to it, preserving the path, so no
+  shared link breaks.
+- The GitHub repository was renamed to `grand-prix-knockout`. The `package.json` name, the in-app GitHub links and the
+  data-fetch `User-Agent` follow it. The Cloudflare Pages project keeps its internal `grand-prix-playoffs` name, which
+  users never see.
+- Deploys now run through a GitHub Action (`deploy.yml`): a push to `main` runs lint, the tests and the build, and only
+  a clean run uploads to Cloudflare. Cloudflare's build-on-push is off. See `docs/decisions/0007`.
 
 ### Added
 
-- `docs/decisions/0008-name-grand-prix-knockout.md`, recording the name, the vocabulary move, the alternatives
-  considered, and the deferred external rename.
+- `docs/decisions/0008-name-grand-prix-knockout.md`, recording the name, the vocabulary move, and the alternatives
+  considered.
 
 ### Removed
 
 - The NASCAR reference in the `index.html` meta tags and the copy. The old description called the format
   "NASCAR-style playoffs"; NASCAR closed that format for 2026, so the comparison is gone.
-
-The external rename is deferred to a separate owner-run stage: the domain grandprixknockout.com with a redirect from
-grandprixplayoffs.com, the GitHub repository rename, and the Cloudflare project rename. Until it runs, the
-`package.json` name, the `github.com/nickarrow/grand-prix-playoffs` URLs, the grandprixplayoffs.com URLs and the
-Cloudflare project name stay as they are.
 
 ---
 

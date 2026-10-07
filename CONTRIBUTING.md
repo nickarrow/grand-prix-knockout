@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Grand Prix Knockout! This documen
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/grand-prix-playoffs.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/grand-prix-knockout.git`
 3. Install dependencies: `npm install`
 4. Copy `.env.example` to `.env.local` (if needed for API overrides)
 5. Create a branch: `git checkout -b feature/your-feature-name`

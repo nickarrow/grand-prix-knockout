@@ -299,39 +299,44 @@ Vocabulary to settle at the same time: R1 to R3 or Q1 to Q3 as round labels (Q l
 as qualifying session results), "eliminated" or "knocked out", and "drop zone". "Round" also means one Grand Prix in F1
 (round 17 of 23), which collides with this project's Round 1; the new words should end that.
 
-grandprixplayoffs.com is registered at Cloudflare until 2028-02-15 and can redirect to whatever replaces it.
+grandprixplayoffs.com was registered at Cloudflare until 2028-02-15; it now 301-redirects to grandprixknockout.com.
 
-Recommendation: Grand Prix Knockout, from the orchestrator. Decided in increment 4, with a decision record.
+The name is Grand Prix Knockout, shipped in increment 4 and recorded in `0008`. The meta description no longer mentions
+NASCAR. On vocabulary: the round labels stayed R1 to R3, "knocked out" and "drop zone" are the live wording from `0003`.
 
 ### 2. Deploy gating
 
-Cloudflare deploys every push to `main`, including the data workflow's, and nothing runs the tests first. This is a
-solo project with no pull requests, so the gate cannot sit on a merge request. Options:
+Decided. A GitHub Action gates the deploy: a push to `main` runs lint, the tests and the build, and only a clean run
+uploads `dist/` to Cloudflare with Wrangler, so a failing commit cannot reach production. Cloudflare's build-on-push is
+off. See `docs/decisions/0007-deploy-gate.md`, armed and live on 2026-10-07. The context below is the evidence behind it.
+
+Cloudflare deployed every push to `main`, including the data workflow's, and nothing ran the tests first. This is a
+solo project with no pull requests, so the gate could not sit on a merge request. Options:
 
 - Stop Cloudflare building on push, and deploy from a GitHub Action that runs the checks first and only then uploads.
-  Wrangler's direct upload needs a Cloudflare API token stored in GitHub.
+  Wrangler's direct upload needs a Cloudflare API token stored in GitHub. (Chosen.)
 - Keep Cloudflare on push, and accept that the branch check (increment 1) plus the data workflow's own tests are the
   safeguard, with no hard gate before a human merges to `main`.
 
-Inferred: a real gate means moving the deploy behind a check, which is the first option. No recommendation yet. Decided
-in increment 3.
+A real gate means moving the deploy behind a check, which is the first option.
 
-One safeguard comes before that, in increment 1, chosen by the orchestrator on 2026-10-05: the data workflow runs the
-tests and the build against the data it fetched before it commits, and a branch check runs the same on every push to a
-non-`main` branch so the owner sees the result before merging. The data workflow has to run its own checks inline,
-because a push made with the workflow's `GITHUB_TOKEN` starts no other workflow ([GitHub docs][gh-token]). Neither stops
-the owner merging. That hard gate is still this question.
+One safeguard came before that, in increment 1: the data workflow runs the tests and the build against the data it
+fetched before it commits, and a branch check runs the same on every push to a non-`main` branch. The data workflow has
+to run its own checks inline, because a push made with the workflow's `GITHUB_TOKEN` starts no other workflow
+([GitHub docs][gh-token]), which is also why the gate deploys the bot's data commit rather than Cloudflare doing it.
 
 ### 3. Cloudflare Pages settings
 
-The build command, Node version and preview branches live in the Cloudflare dashboard, not in the repository. The owner
-will supply them. `docs/DEPLOYMENT.md` records `npm run build`, output `dist`, Node 20 "auto-detected", and a preview
-for every branch; none of that has been checked against the dashboard.
+Confirmed against the dashboard on 2026-10-07: build command `npm run build`, output `dist`, production branch `main`.
+Automatic deployments are now disabled (the gate from question 2 replaced them). The custom domain is
+grandprixknockout.com; grandprixplayoffs.com is a redirect-only zone. `docs/DEPLOYMENT.md` holds the detail.
 
 ### 4. The tie sub-questions and the calendar proposal
 
-The four tie sub-questions and the three calendar proposals in the format section are waiting for the owner. Increment 2
-cannot encode either rule until they are settled.
+Decided by the owner on 2026-10-06 and shipped in increment 2: countback over the round's own races counting every
+classified position, race finishes only, then regular-season position, then the official F1 standings order as the
+terminal key; and the three calendar-change rules. See `docs/decisions/0004` and `0005`, with the historical outcomes
+the change moved recorded in `0006`.
 
 [nascar-chase]: https://www.nascar.com/news-media/2026/01/12/nascar-returns-to-chase-championship-format-for-2026/
 [nascar-drivers]: https://www.nascar.com/news-media/2026/01/13/nascar-community-lauds-return-of-the-chase-championship-format/
