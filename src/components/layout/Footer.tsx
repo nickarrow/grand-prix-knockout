@@ -20,7 +20,7 @@ export function Footer(): React.ReactElement {
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
           Not affiliated with Formula One Group, FIA, or Formula 1.{' '}
           <MuiLink
-            href="https://github.com/nickarrow/grand-prix-playoffs"
+            href="https://github.com/nickarrow/grand-prix-knockout"
             target="_blank"
             rel="noopener noreferrer"
             color="primary"

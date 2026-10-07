@@ -10,7 +10,7 @@
 
 export const JOLPICA_BASE_URL = 'https://api.jolpi.ca/ergast/f1';
 export const USER_AGENT =
-  'grand-prix-playoffs-data/1.0 (+https://github.com/nickarrow/grand-prix-playoffs)';
+  'grand-prix-knockout-data/1.0 (+https://github.com/nickarrow/grand-prix-knockout)';
 
 // Paging: Jolpica caps limit at 100 and pages with offset.
 export const PAGE_LIMIT = 100;

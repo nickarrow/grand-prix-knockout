@@ -208,7 +208,7 @@ export function AboutPage(): React.ReactElement {
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
           <Link
-            href="https://github.com/nickarrow/grand-prix-playoffs"
+            href="https://github.com/nickarrow/grand-prix-knockout"
             target="_blank"
             rel="noopener noreferrer"
             sx={{ display: 'flex', alignItems: 'center', gap: 1 }}

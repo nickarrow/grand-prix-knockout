@@ -2,9 +2,7 @@
 
 > Reimagining the Formula 1 Drivers' Championship as a true elimination battle.
 
-<!-- Domain flip pending the external-rename stage: this moves to grandprixknockout.com once the owner sets up the domain and the redirect. See docs/decisions/0008. -->
-
-**Live at [grandprixplayoffs.com](https://grandprixplayoffs.com)**
+**Live at [grandprixknockout.com](https://grandprixknockout.com)**
 
 Grand Prix Knockout is an independent, fan-made web application that restructures the F1 World Drivers' Championship into a knockout format. Using official Grand Prix results, the season culminates in a winner-take-all final race among four drivers.
 
