@@ -69,8 +69,21 @@ alternative.
 
 - With Option (a) live, a commit that fails lint, the tests or the build cannot reach production, which is the
   "How you know it worked" line for increment 3 in `docs/delivery-plan.md`.
-- The data workflow's weekly commit to `main` is deployed by this workflow rather than by Cloudflare, so its inline
-  checks and this gate both run before that data reaches the site.
+- The data workflow deploys its own commit (see the 2026-10-13 correction below), so its inline checks publish the
+  weekly data to the site.
+
+### Correction, 2026-10-13: the data workflow must deploy itself
+
+This record originally said the data workflow's weekly commit to `main` would be "deployed by this workflow", meaning
+`deploy.yml`. That was wrong, and it cost a deploy. A push made with a workflow's `GITHUB_TOKEN` does not trigger other
+workflows ([GitHub docs][gh-token]), so the data workflow's commit never fires `deploy.yml`. Under the old
+Cloudflare-on-push setup this did not matter, because Cloudflare watched the branch directly and did not care which
+token pushed. Option (a) removed that, so from 2026-10-07 the weekly data commit landed on `main` and never deployed.
+
+Found on 2026-10-13: the Monday data run committed Singapore's results (`7d5b946`, 17 races) and the site kept showing 16. The fix is that `update-season-data.yml` now runs its own `wrangler pages deploy dist` step after it commits,
+reusing the `dist/` it already built and the same Pages-scoped secrets. The data update is now self-deploying: fetch,
+validate, test, build, commit, deploy, in one job. `deploy.yml` still handles every human push to `main`.
+
 - A second place now holds the deploy settings: the project name lives in `wrangler.toml` and in `deploy.yml`, and the
   output directory in `wrangler.toml`. `docs/DEPLOYMENT.md` records the rest, marked unverified against the dashboard
   (open question 3).

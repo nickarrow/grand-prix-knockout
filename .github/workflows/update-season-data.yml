@@ -99,6 +99,22 @@ jobs:
           git commit --no-verify -m "chore(data): update ${{ steps.year.outputs.year }} season data"
           git push
 
+      # Deploy the refreshed data. This step exists because a push made with the
+      # workflow's GITHUB_TOKEN does not trigger other workflows
+      # (https://docs.github.com/en/actions/concepts/security/github_token), so the
+      # commit above never fires deploy.yml. Without this step the weekly data
+      # update lands on main but never reaches the site, which is what happened
+      # after the 2026-10-13 run. The Build step above already produced dist/ from
+      # the fetched data, and the checks all passed, so this uploads the same way
+      # deploy.yml does, with the same Pages-scoped secrets.
+      - name: Deploy refreshed data to Cloudflare Pages
+        if: steps.changes.outputs.changed == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=grand-prix-playoffs --branch=main
+
       # On a successful run, close any open tracking issue from a previous
       # failure. Guarded by if: success() so it runs only when every step above
       # passed, and it uses the same label/title lookup the failure step uses so
