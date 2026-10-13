@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Box, Chip, Collapse, TableCell, TableRow, Typography } from '@mui/material';
+import { Box, Collapse, TableCell, TableRow, Typography } from '@mui/material';
 import { ChevronRight } from 'lucide-react';
 
 import { useTheme } from '@mui/material/styles';
@@ -173,14 +173,19 @@ export function DriverRow({
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
-        aria-label={`${driver.firstName} ${driver.lastName}, show race-by-race detail`}
+        aria-label={`${driver.firstName} ${driver.lastName}${atRisk ? ', in the drop zone' : ''}, show race-by-race detail`}
         onClick={() => setExpanded(!expanded)}
         onKeyDown={handleToggleKeyDown}
         sx={{
           cursor: 'pointer',
+          // A driver in the drop zone gets a faint tint, echoing the elimination
+          // colour without shouting. The meaning is carried in words by the drop-
+          // zone divider above these rows and the notice above the table, so the
+          // tint is decorative and the state is not colour-only (AGENTS.md).
+          ...(atRisk && { bgcolor: 'rgba(198, 40, 40, 0.12)' }),
           // Only apply hover on devices that support it (not touch)
           '@media (hover: hover)': {
-            '&:hover': { bgcolor: 'action.hover' },
+            '&:hover': { bgcolor: atRisk ? 'rgba(198, 40, 40, 0.18)' : 'action.hover' },
           },
         }}
       >
@@ -225,9 +230,6 @@ export function DriverRow({
             >
               {driver.firstName} {driver.lastName}
             </Typography>
-            {/* Chevron first so it stays in a fixed column across every row.
-                The drop-zone chip sits to its right, so a chip never shifts the
-                carets out of alignment. */}
             <ChevronRight
               size={CHEVRON_ICON_SIZE}
               style={{
@@ -237,21 +239,6 @@ export function DriverRow({
                 flexShrink: 0,
               }}
             />
-            {atRisk && (
-              <Chip
-                label="Drop zone"
-                size="small"
-                sx={{
-                  height: 18,
-                  fontSize: '0.65rem',
-                  fontWeight: 600,
-                  bgcolor: 'warning.main',
-                  color: 'warning.contrastText',
-                  flexShrink: 0,
-                  '& .MuiChip-label': { px: 0.75 },
-                }}
-              />
-            )}
           </Box>
         </TableCell>
 

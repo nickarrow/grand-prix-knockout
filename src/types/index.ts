@@ -97,7 +97,8 @@ export interface DriverStanding {
 // Knockout round result
 export interface KnockoutRound {
   round: number; // 1, 2, 3, or 4 (final)
-  raceNumbers: number[]; // Which race rounds are in this knockout round
+  raceNumbers: number[]; // Which race rounds have RUN in this knockout round so far
+  scheduledRaceCount: number; // How many races the round is scheduled to have (2 for rounds 1-3, 1 for the final)
   standings: DriverStanding[];
   isComplete: boolean; // true once every race the round covers has a result
   eliminated: string[]; // driverIds eliminated this round; empty until the round is complete

@@ -246,6 +246,11 @@ describe('calculateKnockoutState', () => {
     expect(round1?.isComplete).toBe(false);
     expect(round1?.eliminated).toEqual([]);
     expect(round1?.advancing).toEqual([]);
+    // Only one race has run, but the round is scheduled for two: the UI shows
+    // "1 of 2 races run", so scheduledRaceCount is the planned length (2), not
+    // the count of races run (1).
+    expect(round1?.raceNumbers).toHaveLength(1);
+    expect(round1?.scheduledRaceCount).toBe(2);
     // The two lowest active drivers (d9, d10 finish 9th and 10th every race) are at risk.
     expect(round1?.atRisk).toHaveLength(ELIMINATIONS_PER_ROUND);
     expect(round1?.atRisk).toContain('d9');

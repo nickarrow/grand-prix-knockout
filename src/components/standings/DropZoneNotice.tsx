@@ -5,7 +5,7 @@
 // accessibility tree without any row having to be expanded.
 
 import { Box, Typography } from '@mui/material';
-import { AlertTriangle } from 'lucide-react';
+import { Flag } from 'lucide-react';
 
 import type { KnockoutState } from 'src/types';
 import { getInProgressRound } from 'src/utils';
@@ -25,7 +25,9 @@ export function DropZoneNotice({
     return null;
   }
 
-  const totalRoundRaces = round.raceNumbers.length;
+  // Denominator is how many races the round is SCHEDULED to have, not how many
+  // have run so far, so an in-progress Round 1 reads "1 of 2", not "1 of 1".
+  const totalRoundRaces = round.scheduledRaceCount;
   const racesRun = round.raceNumbers.filter((raceNumber) => raceNumber <= completedRaces).length;
 
   const atRiskNames = round.atRisk
@@ -42,13 +44,21 @@ export function DropZoneNotice({
         mb: 2,
         p: 1.5,
         borderRadius: 1,
-        bgcolor: 'warning.main',
-        color: 'warning.contrastText',
+        // A light, informational treatment rather than a heavy warning fill: a
+        // tinted surface with a thin accent bar, so it reads as "heads up" not
+        // "error". The text carries the meaning, so colour is not load-bearing.
+        bgcolor: 'action.hover',
+        borderLeft: 3,
+        borderColor: 'primary.main',
       }}
     >
-      <AlertTriangle size={DROP_ZONE_ICON_SIZE} aria-hidden="true" style={{ flexShrink: 0 }} />
-      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-        {`Round ${round.round}: ${racesRun} of ${totalRoundRaces} races run. Drivers in the drop zone are knocked out if the round ends now: ${atRiskNames}.`}
+      <Flag size={DROP_ZONE_ICON_SIZE} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+      <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+        <strong>
+          Round {round.round}: {racesRun} of {totalRoundRaces} races run.
+        </strong>{' '}
+        {atRiskNames} {round.atRisk.length === 1 ? 'is' : 'are'} in the drop zone, knocked out if
+        the round ends now.
       </Typography>
     </Box>
   );

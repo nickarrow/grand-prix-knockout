@@ -36,6 +36,7 @@ const createRound = (
 ): KnockoutRound => ({
   round: roundNum,
   raceNumbers: [roundNum],
+  scheduledRaceCount: 2,
   standings: standings.map((s) => createStanding(s.id, s.points)),
   isComplete: eliminated.length > 0,
   eliminated,

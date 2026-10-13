@@ -20,10 +20,49 @@ import {
   isRegularSeasonComplete,
   getActiveRankingRound,
   rankInRound,
+  isDriverAtRisk,
 } from 'src/utils';
 
 import { DriverRow } from './DriverRow';
 import { DropZoneNotice } from './DropZoneNotice';
+
+// The qualifying-style cutoff line, drawn across the table between the drivers
+// who would advance and those in the drop zone while a round is in progress. It
+// mirrors the elimination line in F1 qualifying's timing tower. The label carries
+// the meaning so the state does not depend on colour (AGENTS.md).
+function DropZoneDivider(): React.ReactElement {
+  return (
+    <TableRow aria-hidden="true">
+      <TableCell colSpan={8} sx={{ p: 0, border: 'none' }}>
+        {/* The cutoff line lives on an inner Box, not the cell, so it spans the
+            table content width without the cell's own border extending past the
+            table edge. The top rule plus the tinted strip read as the elimination
+            line in F1 qualifying's timing tower. */}
+        <Box
+          sx={{
+            borderTop: 2,
+            borderColor: 'error.main',
+            bgcolor: 'rgba(198, 40, 40, 0.12)',
+          }}
+        >
+          <Typography
+            sx={{
+              color: 'error.main',
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              fontSize: '0.65rem',
+              textTransform: 'uppercase',
+              py: 0.4,
+              px: 1.5,
+            }}
+          >
+            Drop zone — knocked out if the round ends now
+          </Typography>
+        </Box>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 interface StandingsTableProps {
   knockoutState: KnockoutState;
@@ -310,9 +349,19 @@ export function StandingsTable({
 
           <TableBody>
             {groups.map((group) => {
-              const rows = group.drivers.map((standing) => {
+              const rows: React.ReactNode[] = [];
+              let dividerShown = false;
+              for (const standing of group.drivers) {
+                // Draw the drop-zone cutoff line immediately before the first
+                // at-risk driver. Because the active group is sorted with at-risk
+                // drivers at the bottom, this falls between the safe drivers and
+                // the drop zone, like the elimination line in qualifying.
+                if (!dividerShown && isDriverAtRisk(standing.driver.driverId, knockoutState)) {
+                  rows.push(<DropZoneDivider key="drop-zone-divider" />);
+                  dividerShown = true;
+                }
                 runningPosition++;
-                return (
+                rows.push(
                   <DriverRow
                     key={standing.driver.driverId}
                     driver={standing.driver}
@@ -323,7 +372,7 @@ export function StandingsTable({
                     allRaces={allRaces}
                   />
                 );
-              });
+              }
 
               // Skip banner for finalists (empty label)
               if (!group.label) {

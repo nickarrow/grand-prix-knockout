@@ -99,6 +99,7 @@ function calculateKnockoutRound(
   allSeasonRaces: Race[],
   isComplete: boolean,
   advancingCount: number,
+  scheduledRaceCount: number,
   regularSeasonOrder?: Map<string, number>
 ): KnockoutRound {
   // Calculate standings for ALL qualified drivers (for bracket point tracking)
@@ -130,6 +131,7 @@ function calculateKnockoutRound(
   return {
     round: knockoutRound,
     raceNumbers: roundRaces.map((race) => race.round),
+    scheduledRaceCount,
     standings: allStandings, // Include all qualified drivers for bracket tracking
     isComplete,
     eliminated,
@@ -309,6 +311,7 @@ export function calculateKnockoutState(
         rounds.push({
           round: roundNum,
           raceNumbers: round3Races.map((race) => race.round),
+          scheduledRaceCount: roundConfig.races,
           standings: finalStandings,
           isComplete: true,
           eliminated: finalistRanking.slice(1),
@@ -328,6 +331,7 @@ export function calculateKnockoutState(
         races,
         true,
         roundConfig.endDrivers,
+        roundConfig.races,
         regularSeasonOrder
       );
       rounds.push(round);
@@ -361,6 +365,7 @@ export function calculateKnockoutState(
       races,
       isRoundComplete,
       advancingCount,
+      roundConfig.races,
       regularSeasonOrder
     );
     rounds.push(round);
