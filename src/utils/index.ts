@@ -38,6 +38,28 @@ export function isDriverAtRisk(driverId: string, knockoutState: KnockoutState): 
   return round?.atRisk.includes(driverId) ?? false;
 }
 
+// The round whose order should rank the still-competing drivers: the one in
+// progress if a round is mid-run, otherwise the most recent completed round.
+// Returns undefined before any knockout race has run (nothing to rank by yet).
+export function getActiveRankingRound(knockoutState: KnockoutState): KnockoutRound | undefined {
+  const inProgress = getInProgressRound(knockoutState);
+  if (inProgress) return inProgress;
+  // No round in progress: use the latest round that has run, if any.
+  const withRaces = knockoutState.rounds.filter((round) => round.standings.length > 0);
+  return withRaces[withRaces.length - 1];
+}
+
+// A driver's rank within a round's standings, which the engine has already
+// ordered by the full rule (round points, then countback, then regular-season
+// position). Lower is better. A driver not present sorts last. This is what
+// orders the still-competing group so the drop zone sits at the bottom and ties
+// resolve deterministically rather than by input order.
+export function rankInRound(round: KnockoutRound | undefined, driverId: string): number {
+  if (!round) return Number.MAX_SAFE_INTEGER;
+  const index = round.standings.findIndex((s) => s.driver.driverId === driverId);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+}
+
 // Get points for a driver in a specific knockout round
 export function getKnockoutRoundPoints(
   round: KnockoutRound | undefined,

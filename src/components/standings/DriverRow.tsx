@@ -225,6 +225,18 @@ export function DriverRow({
             >
               {driver.firstName} {driver.lastName}
             </Typography>
+            {/* Chevron first so it stays in a fixed column across every row.
+                The drop-zone chip sits to its right, so a chip never shifts the
+                carets out of alignment. */}
+            <ChevronRight
+              size={CHEVRON_ICON_SIZE}
+              style={{
+                transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+                opacity: 0.5,
+                flexShrink: 0,
+              }}
+            />
             {atRisk && (
               <Chip
                 label="Drop zone"
@@ -240,15 +252,6 @@ export function DriverRow({
                 }}
               />
             )}
-            <ChevronRight
-              size={CHEVRON_ICON_SIZE}
-              style={{
-                transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease',
-                opacity: 0.5,
-                flexShrink: 0,
-              }}
-            />
           </Box>
         </TableCell>
 

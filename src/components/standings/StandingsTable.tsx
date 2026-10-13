@@ -14,7 +14,13 @@ import {
 
 import type { KnockoutState, Race, DriverStanding } from 'src/types';
 import { F1_COLUMN_WIDTH } from 'src/constants';
-import { getEliminationRound, getBracketPoints, isRegularSeasonComplete } from 'src/utils';
+import {
+  getEliminationRound,
+  getBracketPoints,
+  isRegularSeasonComplete,
+  getActiveRankingRound,
+  rankInRound,
+} from 'src/utils';
 
 import { DriverRow } from './DriverRow';
 import { DropZoneNotice } from './DropZoneNotice';
@@ -29,6 +35,12 @@ function sortByKnockoutProgression(
   standings: DriverStanding[],
   knockoutState: KnockoutState
 ): DriverStanding[] {
+  // The round that ranks the still-competing drivers: the one in progress, or the
+  // most recent completed round between rounds. Its standings are already ordered
+  // by the engine's full rule, so the drop zone sits at the bottom of the group
+  // and ties resolve deterministically.
+  const activeRound = getActiveRankingRound(knockoutState);
+
   return [...standings].sort((a, b) => {
     const aElimRound = getEliminationRound(a.driver.driverId, knockoutState);
     const bElimRound = getEliminationRound(b.driver.driverId, knockoutState);
@@ -37,25 +49,27 @@ function sortByKnockoutProgression(
     if (knockoutState.champion === a.driver.driverId) return -1;
     if (knockoutState.champion === b.driver.driverId) return 1;
 
-    // Sort by elimination round (0 = finalists first, then 3, 2, 1)
+    // Sort by elimination round (0 = still competing first, then 3, 2, 1)
     if (aElimRound !== bElimRound) {
       if (aElimRound === 0) return -1;
       if (bElimRound === 0) return 1;
       return bElimRound - aElimRound;
     }
 
-    // Same elimination round - sort by cumulative bracket points
-    // Finalists (elimRound 0): sort by final round points only (winner-take-all handled above)
-    // Eliminated drivers: sort by cumulative points from elimination round onward
+    // Still-competing drivers (elimRound 0): rank by the active round's order, so
+    // the leaders are on top and the drop zone falls to the bottom. Before any
+    // knockout race (no active round) this leaves them in regular-season order.
     if (aElimRound === 0) {
-      // Finalists: sort by final round (round 4) points
-      const aFinalPoints = getBracketPoints(a.driver.driverId, 4, knockoutState);
-      const bFinalPoints = getBracketPoints(b.driver.driverId, 4, knockoutState);
-      return bFinalPoints - aFinalPoints;
+      if (activeRound) {
+        return (
+          rankInRound(activeRound, a.driver.driverId) - rankInRound(activeRound, b.driver.driverId)
+        );
+      }
+      return 0; // No round run yet: keep the regular-season order passed in.
     }
 
-    // Eliminated drivers: sort by cumulative points from their elimination round onward
-    // e.g., R1 eliminated: R1 + R2 + R3 + Final points
+    // Eliminated drivers: sort by cumulative points from their elimination round
+    // onward, e.g. R1 eliminated by R1 + R2 + R3 + Final points.
     const aBracketPoints = getBracketPoints(a.driver.driverId, aElimRound, knockoutState);
     const bBracketPoints = getBracketPoints(b.driver.driverId, bElimRound, knockoutState);
     return bBracketPoints - aBracketPoints;
