@@ -9013,10 +9013,6 @@
           "position": 8
         },
         {
-          "driverId": "lawson",
-          "position": 8
-        },
-        {
           "driverId": "gasly",
           "position": 9
         },
@@ -9059,6 +9055,10 @@
         {
           "driverId": "bottas",
           "position": 21
+        },
+        {
+          "driverId": "lawson",
+          "position": 22
         }
       ],
       "sprint": null
@@ -9359,7 +9359,7 @@
         },
         {
           "driverId": "rafael_camara",
-          "driverCode": "RAF",
+          "driverCode": "CAM",
           "firstName": "Rafael",
           "lastName": "Camara",
           "constructorId": "haas",
